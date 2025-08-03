@@ -6,19 +6,21 @@
     "Express.js",
     "Node.js",
     "PostgreSQL",
+    "TailwindCSS",
     "Zustand",
-    "TanStack Query",
-    "Tailwind CSS",
-    "Radix UI",
+    "React Query",
     "Socket.io",
-    "JWT Authentication",
-    "Multer",
-    "Zod"
+    "JWT",
+    "Zod",
+    "Radix UI",
+    "React Router",
+    "Axios",
+    "Multer"
   ],
   "features": [
     {
       "name": "User Authentication",
-      "description": "Complete login/logout system with JWT tokens and persistent sessions",
+      "description": "Complete login/logout system with JWT tokens, registration, and session management",
       "files": [
         "src/components/views/UV_LogInSignUp.tsx",
         "src/store/main.tsx",
@@ -26,42 +28,68 @@
       ]
     },
     {
-      "name": "Image Gallery & Showcase",
-      "description": "Browse and view image showcases with search and filtering capabilities",
+      "name": "Image Upload & Management",
+      "description": "Upload images with metadata, categorization, and file storage",
       "files": [
-        "src/components/views/UV_Homepage.tsx",
-        "src/components/views/UV_Explore.tsx",
-        "src/components/views/UV_SingleImageView.tsx"
-      ]
-    },
-    {
-      "name": "Image Upload",
-      "description": "Upload images with metadata including title, description, and tags",
-      "files": [
-        "src/components/views/UV_ImageUpload.tsx"
-      ]
-    },
-    {
-      "name": "User Profiles",
-      "description": "User profile management and viewing other users' profiles",
-      "files": [
-        "src/components/views/UV_UserProfile.tsx",
-        "src/components/views/UV_UserDashboard.tsx"
-      ]
-    },
-    {
-      "name": "Social Features",
-      "description": "Follow users, like images, and comment on showcases",
-      "files": [
+        "src/components/views/UV_ImageUpload.tsx",
         "backend/server.ts"
       ]
     },
     {
-      "name": "Real-time Notifications",
-      "description": "WebSocket-based notifications for likes, comments, and follows",
+      "name": "Image Gallery & Exploration",
+      "description": "Browse, search, and filter images with responsive grid layout",
+      "files": [
+        "src/components/views/UV_Homepage.tsx",
+        "src/components/views/UV_Explore.tsx",
+        "src/components/views/UV_BrowseGallery.tsx"
+      ]
+    },
+    {
+      "name": "Image Details & Interaction",
+      "description": "View individual images with comments, likes, and social features",
+      "files": [
+        "src/components/views/UV_SingleImageView.tsx",
+        "src/components/views/UV_ImageDetails.tsx"
+      ]
+    },
+    {
+      "name": "User Profiles",
+      "description": "User profile pages with personal galleries and profile management",
+      "files": [
+        "src/components/views/UV_UserProfile.tsx",
+        "src/components/views/UV_Profile.tsx"
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "description": "User dashboard for managing uploads, showcases, and account",
+      "files": [
+        "src/components/views/UV_UserDashboard.tsx",
+        "src/components/views/UV_Dashboard.tsx"
+      ]
+    },
+    {
+      "name": "Collections & Showcases",
+      "description": "Create and manage image collections and showcases",
+      "files": [
+        "src/components/views/UV_Collections.tsx",
+        "src/components/views/UV_ShowcaseCreation.tsx",
+        "src/components/views/UV_ShowcasePage.tsx"
+      ]
+    },
+    {
+      "name": "Social Features",
+      "description": "Follow users, like images, comment system, and notifications",
       "files": [
         "src/components/views/UV_Notifications.tsx",
-        "src/store/main.tsx",
+        "backend/server.ts"
+      ]
+    },
+    {
+      "name": "Search & Discovery",
+      "description": "Search images by title, description, tags, and categories",
+      "files": [
+        "src/components/views/UV_SearchResults.tsx",
         "backend/server.ts"
       ]
     },
@@ -73,12 +101,19 @@
       ]
     },
     {
+      "name": "Real-time Features",
+      "description": "WebSocket-based real-time notifications and updates",
+      "files": [
+        "src/store/main.tsx",
+        "backend/server.ts"
+      ]
+    },
+    {
       "name": "Navigation & Layout",
-      "description": "Responsive navigation with authentication-aware menu items",
+      "description": "Responsive navigation with authentication-aware menu system",
       "files": [
         "src/components/views/GV_TopNav.tsx",
-        "src/components/views/GV_Footer.tsx",
-        "src/App.tsx"
+        "src/components/views/GV_Footer.tsx"
       ]
     }
   ],

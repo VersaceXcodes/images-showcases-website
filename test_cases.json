@@ -8,94 +8,91 @@
       "description": "Verify the application has actual functionality beyond basic placeholder",
       "steps": [
         "Navigate to application homepage",
-        "Verify navigation menu exists with Explore, Featured, Login/Signup links",
-        "Check for image gallery grid layout on homepage",
-        "Verify application shows real image showcases, not placeholder content",
-        "Test navigation between different pages (Explore, Featured)"
+        "Verify multiple interactive elements exist (navigation menu, buttons, image gallery)",
+        "Check for proper navigation structure with working links",
+        "Verify application shows real image showcase features, not placeholder content",
+        "Confirm responsive design elements are present"
       ],
-      "expectedOutcome": "Application shows functional image gallery with navigation and real content",
-      "failureCondition": "If page only shows 'Vite + React' placeholder or no interactive elements, this test should FAIL"
+      "expectedOutcome": "Application shows functional image showcase features with navigation, gallery, and interactivity",
+      "failureCondition": "If page only shows 'Vite + React' placeholder or basic template, this test should FAIL"
+    },
+    {
+      "id": "navigation-test",
+      "name": "Navigation System Test",
+      "category": "interface",
+      "priority": "high",
+      "description": "Test that navigation menu and routing work correctly",
+      "steps": [
+        "Check top navigation bar is visible and fixed",
+        "Click on 'Explore' link and verify it navigates to explore page",
+        "Click on 'Featured' link and verify it navigates to featured galleries",
+        "Verify logo/home link returns to homepage",
+        "Test authentication-dependent navigation (Login/Signup vs User menu)"
+      ],
+      "expectedOutcome": "All navigation links work correctly and show appropriate content"
+    },
+    {
+      "id": "homepage-content-test",
+      "name": "Homepage Content Test",
+      "category": "content",
+      "priority": "high",
+      "description": "Verify homepage displays image showcases and content properly",
+      "steps": [
+        "Load homepage and check for 'Explore Showcases' heading",
+        "Verify image grid layout is present",
+        "Check that images are displayed with titles and descriptions",
+        "Verify 'View Image' links are present on showcase cards",
+        "Test loading states and error handling"
+      ],
+      "expectedOutcome": "Homepage displays image showcases in a responsive grid with proper metadata"
     },
     {
       "id": "authentication-flow-test",
-      "name": "User Authentication Flow Test",
-      "category": "authentication",
+      "name": "Authentication Flow Test",
+      "category": "functionality",
       "priority": "critical",
-      "description": "Test complete user registration and login functionality",
+      "description": "Test user registration and login functionality",
       "steps": [
-        "Navigate to /auth page",
-        "Test user registration with valid email, username, and password",
-        "Verify successful registration redirects to authenticated state",
-        "Test logout functionality",
-        "Test login with registered credentials",
-        "Verify authentication state persists across page refreshes"
+        "Navigate to login/signup page via navigation",
+        "Verify login form has email and password fields",
+        "Test form validation with empty fields",
+        "Switch to signup mode and verify additional username field appears",
+        "Test password confirmation validation",
+        "Verify error messages display for invalid inputs"
       ],
-      "expectedOutcome": "Users can successfully register, login, logout, and maintain session state"
-    },
-    {
-      "id": "image-gallery-test",
-      "name": "Image Gallery Display Test",
-      "category": "interface",
-      "priority": "high",
-      "description": "Test image gallery functionality and display",
-      "steps": [
-        "Navigate to homepage",
-        "Verify image grid displays with proper layout",
-        "Check that images load correctly",
-        "Test clicking on individual images to view details",
-        "Verify image metadata (title, description) displays properly",
-        "Test search functionality on /explore page"
-      ],
-      "expectedOutcome": "Image gallery displays properly with functional image viewing and search"
+      "expectedOutcome": "Authentication forms work with proper validation and error handling"
     },
     {
       "id": "image-upload-test",
       "name": "Image Upload Functionality Test",
       "category": "functionality",
       "priority": "high",
-      "description": "Test authenticated image upload feature",
+      "description": "Test image upload feature for authenticated users",
       "steps": [
-        "Login as authenticated user",
-        "Navigate to /upload page",
-        "Select an image file (PNG or JPEG)",
-        "Fill in title and description fields",
-        "Add tags (comma-separated)",
-        "Submit upload form",
-        "Verify success message appears",
-        "Check that uploaded image appears in gallery"
+        "Navigate to upload page (should require authentication)",
+        "Verify upload form has file input, title, description, and tags fields",
+        "Test form validation for required fields",
+        "Check file type restrictions (PNG, JPEG)",
+        "Verify upload button and loading states",
+        "Test success and error message display"
       ],
-      "expectedOutcome": "Authenticated users can successfully upload images with metadata"
+      "expectedOutcome": "Upload form works with proper validation and file handling"
     },
     {
-      "id": "navigation-test",
-      "name": "Navigation and Routing Test",
-      "category": "interface",
-      "priority": "high",
-      "description": "Test application navigation and routing functionality",
-      "steps": [
-        "Test navigation to all main pages: /, /explore, /featured, /auth",
-        "Verify protected routes redirect unauthenticated users to login",
-        "Test authenticated navigation to /upload, /dashboard, /notifications",
-        "Verify user dropdown menu functionality when logged in",
-        "Test responsive navigation on different screen sizes"
-      ],
-      "expectedOutcome": "All navigation links work correctly with proper authentication handling"
-    },
-    {
-      "id": "user-profile-test",
-      "name": "User Profile Management Test",
+      "id": "image-exploration-test",
+      "name": "Image Exploration Test",
       "category": "functionality",
-      "priority": "medium",
-      "description": "Test user profile viewing and management",
+      "priority": "high",
+      "description": "Test image browsing and filtering functionality",
       "steps": [
-        "Login as authenticated user",
-        "Navigate to user profile page",
-        "Verify profile information displays correctly",
-        "Test viewing other users' profiles",
-        "Navigate to dashboard page",
-        "Verify user's uploaded images display in dashboard"
+        "Navigate to explore page",
+        "Verify sidebar with filter options is present",
+        "Test category filters (e.g., Landscapes)",
+        "Test sort options (e.g., Newest)",
+        "Verify image grid displays filtered results",
+        "Test individual image links navigate to detail pages"
       ],
-      "expectedOutcome": "User profiles display correctly with proper user data and uploaded content"
+      "expectedOutcome": "Explore page shows filterable image gallery with working navigation"
     },
     {
       "id": "responsive-design-test",
@@ -104,78 +101,134 @@
       "priority": "medium",
       "description": "Test application responsiveness across different screen sizes",
       "steps": [
-        "Test application on desktop viewport (1920x1080)",
-        "Test on tablet viewport (768x1024)",
-        "Test on mobile viewport (375x667)",
-        "Verify navigation menu adapts to screen size",
-        "Check image grid layout responsiveness",
-        "Verify forms and buttons are properly sized and accessible"
+        "Test navigation menu on mobile devices",
+        "Verify image grid adapts to different screen sizes",
+        "Check that forms remain usable on smaller screens",
+        "Test touch interactions on mobile",
+        "Verify text remains readable at different zoom levels"
       ],
-      "expectedOutcome": "Application displays properly and remains functional across all screen sizes"
+      "expectedOutcome": "Application maintains usability and visual appeal across all device sizes"
+    },
+    {
+      "id": "image-detail-test",
+      "name": "Image Detail Page Test",
+      "category": "functionality",
+      "priority": "high",
+      "description": "Test individual image detail pages and interactions",
+      "steps": [
+        "Click on an image from homepage or explore page",
+        "Verify image detail page loads with full-size image",
+        "Check that image metadata (title, description, tags) is displayed",
+        "Test comment section if present",
+        "Test like functionality if present",
+        "Verify back navigation works"
+      ],
+      "expectedOutcome": "Image detail pages display complete information with working interactions"
     },
     {
       "id": "search-functionality-test",
-      "name": "Search and Filter Test",
+      "name": "Search Functionality Test",
       "category": "functionality",
       "priority": "medium",
-      "description": "Test image search and filtering capabilities",
+      "description": "Test search capabilities across the application",
       "steps": [
-        "Navigate to /explore page",
-        "Test search functionality with various keywords",
-        "Verify search results update dynamically",
-        "Test filtering by categories if available",
-        "Verify search handles empty results gracefully",
-        "Test search with special characters and edge cases"
+        "Look for search input field in navigation or explore page",
+        "Test search with various keywords",
+        "Verify search results display relevant images",
+        "Test empty search results handling",
+        "Check search result pagination if present"
       ],
-      "expectedOutcome": "Search functionality works correctly and returns relevant results"
+      "expectedOutcome": "Search functionality returns relevant results with proper handling of edge cases"
+    },
+    {
+      "id": "user-profile-test",
+      "name": "User Profile Test",
+      "category": "functionality",
+      "priority": "medium",
+      "description": "Test user profile pages and profile management",
+      "steps": [
+        "Navigate to a user profile page",
+        "Verify user information is displayed",
+        "Check user's uploaded images are shown",
+        "Test profile editing functionality if authenticated as profile owner",
+        "Verify follow/unfollow functionality if present"
+      ],
+      "expectedOutcome": "User profiles display complete information with appropriate interaction options"
     },
     {
       "id": "error-handling-test",
-      "name": "Error Handling and Edge Cases Test",
+      "name": "Error Handling Test",
       "category": "reliability",
       "priority": "medium",
-      "description": "Test application error handling and edge case scenarios",
+      "description": "Test application behavior with various error conditions",
       "steps": [
-        "Test login with invalid credentials",
-        "Test registration with existing email",
-        "Test image upload with invalid file types",
-        "Test navigation to non-existent routes",
-        "Test form submission with missing required fields",
-        "Verify appropriate error messages display"
+        "Test navigation to non-existent pages",
+        "Test form submissions with invalid data",
+        "Test image loading failures",
+        "Test network connectivity issues",
+        "Verify appropriate error messages are displayed"
       ],
       "expectedOutcome": "Application handles errors gracefully with informative user feedback"
     },
     {
       "id": "performance-test",
-      "name": "Application Performance Test",
+      "name": "Performance Test",
       "category": "performance",
-      "priority": "low",
-      "description": "Test application loading performance and responsiveness",
+      "priority": "medium",
+      "description": "Test application loading speed and performance",
       "steps": [
         "Measure initial page load time",
-        "Test image loading performance in gallery",
-        "Verify smooth navigation between pages",
-        "Test application with large number of images",
-        "Check for memory leaks during extended usage",
-        "Verify loading states display appropriately"
+        "Test image loading performance in galleries",
+        "Check for smooth scrolling and interactions",
+        "Verify lazy loading of images if implemented",
+        "Test application with large numbers of images"
       ],
-      "expectedOutcome": "Application loads quickly and performs smoothly under normal usage"
+      "expectedOutcome": "Application loads quickly and maintains smooth performance during use"
     },
     {
       "id": "social-features-test",
       "name": "Social Features Test",
       "category": "functionality",
-      "priority": "low",
-      "description": "Test social interaction features like likes, comments, and follows",
+      "priority": "medium",
+      "description": "Test social interaction features like comments, likes, and follows",
       "steps": [
-        "Login as authenticated user",
-        "Test liking/unliking images",
         "Test commenting on images",
-        "Test following/unfollowing other users",
-        "Navigate to notifications page",
-        "Verify notifications display for social interactions"
+        "Test liking/unliking images",
+        "Test following/unfollowing users",
+        "Check notifications for social interactions",
+        "Verify social counters update correctly"
       ],
-      "expectedOutcome": "Social features work correctly with proper notification handling"
+      "expectedOutcome": "Social features work correctly with real-time updates and proper feedback"
+    },
+    {
+      "id": "accessibility-test",
+      "name": "Accessibility Test",
+      "category": "accessibility",
+      "priority": "medium",
+      "description": "Test application accessibility features",
+      "steps": [
+        "Test keyboard navigation throughout the application",
+        "Verify alt text is present on images",
+        "Check color contrast ratios",
+        "Test with screen reader compatibility",
+        "Verify form labels and ARIA attributes"
+      ],
+      "expectedOutcome": "Application is accessible to users with disabilities and follows WCAG guidelines"
+    },
+    {
+      "id": "data-persistence-test",
+      "name": "Data Persistence Test",
+      "category": "functionality",
+      "priority": "high",
+      "description": "Test that user data and application state persist correctly",
+      "steps": [
+        "Login and verify session persists after page refresh",
+        "Upload an image and verify it appears in user's gallery",
+        "Create collections or showcases and verify they're saved",
+        "Test logout and verify session is properly cleared",
+        "Test browser storage and state management"
+      ],
+      "expectedOutcome": "User data and application state persist correctly across sessions"
     }
   ]
 }

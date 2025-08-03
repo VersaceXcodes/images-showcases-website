@@ -11,8 +11,8 @@ const fetchImages = async (category: string, tag: string, sort: string): Promise
   if (tag) queryParams.append('tag', tag);
   if (sort) queryParams.append('sort_order', sort);
 
-  const { data } = await axios.get<Image[]>(`\${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/images`, {
-    params: queryParams,
+  const { data } = await axios.get<Image[]>(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/images/search`, {
+    params: { query: category || tag || '', limit: 20, offset: 0, sort_by: 'uploaded_at', sort_order: sort || 'DESC' },
   });
   return data;
 };
