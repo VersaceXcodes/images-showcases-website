@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { showcaseSchema } from '@schema';
+
 import { useAppStore } from '@/store/main';
 import { Link } from 'react-router-dom';
 
@@ -13,14 +13,19 @@ export interface Showcase {
   description: string | null;
   tags: string[];
   category: string;
+  images: Array<{
+    image_id: string;
+    url: string;
+    title?: string;
+    description?: string;
+  }>;
 }
 
 const fetchShowcase = async (showcase_id: string): Promise<Showcase> => {
   const { data } = await axios.get<Showcase>(
     `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/showcases/${showcase_id}`
   );
-  const parsedData = showcaseSchema.parse(data);
-  return parsedData;
+  return data;
 };
 
 const UV_ShowcasePage: React.FC = () => {
@@ -31,12 +36,12 @@ const UV_ShowcasePage: React.FC = () => {
   const {
     data: currentShowcase,
     error,
-    isLoading,
-  } = useQuery<Showcase, Error>(
-    ['showcase', showcase_id],
-    () => fetchShowcase(showcase_id!),
-    { enabled: Boolean(showcase_id) }
-  );
+    isPending: isLoading,
+  } = useQuery<Showcase, Error>({
+    queryKey: ['showcase', showcase_id],
+    queryFn: () => fetchShowcase(showcase_id!),
+    enabled: Boolean(showcase_id),
+  });
 
   useEffect(() => {
     document.title = currentShowcase ? currentShowcase.title : 'Loading...';

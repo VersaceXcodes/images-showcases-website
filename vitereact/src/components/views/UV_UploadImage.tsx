@@ -31,16 +31,17 @@ const UV_UploadImage: React.FC = () => {
   });
 
   // Image upload mutation
-  const imageUploadMutation = useMutation(async (imageInput: CreateImageInput) => {
-    const formData = new FormData();
-    formData.append('title', imageInput.title);
-    formData.append('description', imageInput.description || '');
-    formData.append('categories', imageInput.categories || '');
-    formData.append('image', imageFile!);
+  const imageUploadMutation = useMutation({
+    mutationFn: async (imageInput: CreateImageInput) => {
+      const formData = new FormData();
+      formData.append('title', imageInput.title);
+      formData.append('description', imageInput.description || '');
+      formData.append('categories', imageInput.categories || '');
+      formData.append('image', imageFile!);
 
-    const { data } = await axiosInstance.post('/images', formData);
-    return data;
-  }, {
+      const { data } = await axiosInstance.post('/images', formData);
+      return data;
+    },
     onSuccess: () => {
       // Clear form after submission
       setTitle('');
@@ -52,7 +53,7 @@ const UV_UploadImage: React.FC = () => {
     onError: (error: any) => {
       const errMsg = error.response?.data?.message || 'Upload failed';
       setErrorMessage(errMsg);
-    }
+    },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -140,10 +141,10 @@ const UV_UploadImage: React.FC = () => {
             <div>
               <button
                 type="submit"
-                disabled={!imageFile || imageUploadMutation.isLoading}
+                disabled={!imageFile || imageUploadMutation.isPending}
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
               >
-                {imageUploadMutation.isLoading ? 'Uploading...' : 'Upload Image'}
+                {imageUploadMutation.isPending ? 'Uploading...' : 'Upload Image'}
               </button>
             </div>
           </form>

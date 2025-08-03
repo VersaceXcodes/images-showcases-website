@@ -1,4 +1,4 @@
-import React, { useState, useEffect, FC } from 'react';
+import { useState, useEffect, FC } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import axios from 'axios';
@@ -35,21 +35,27 @@ const UV_Profile: FC = () => {
   const [updatedUsername, setUpdatedUsername] = useState('');
   const [updatedEmail, setUpdatedEmail] = useState('');
 
-  const { data: userProfile, isLoading: loadingProfile } = useQuery(['userProfile', user_id], () => fetchUserProfile(user_id!), {
-    enabled: !!user_id
+  const { data: userProfile, isPending: loadingProfile } = useQuery({
+    queryKey: ['userProfile', user_id],
+    queryFn: () => fetchUserProfile(user_id!),
+    enabled: !!user_id,
   });
 
-  const { data: userImages, isLoading: loadingImages } = useQuery(['userImages', user_id], () => fetchUserImages(user_id!), {
-    enabled: !!user_id
+  const { data: userImages, isPending: loadingImages } = useQuery({
+    queryKey: ['userImages', user_id],
+    queryFn: () => fetchUserImages(user_id!),
+    enabled: !!user_id,
   });
 
-  const updateUser = useMutation(async () => {
-    if (userProfile) {
-      await axios.put(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/users/${userProfile.user_id}`, {
-        username: updatedUsername,
-        email: updatedEmail,
-      });
-    }
+  const updateUser = useMutation({
+    mutationFn: async () => {
+      if (userProfile) {
+        await axios.put(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/users/${userProfile.user_id}`, {
+          username: updatedUsername,
+          email: updatedEmail,
+        });
+      }
+    },
   });
 
   const handleSave = async () => {

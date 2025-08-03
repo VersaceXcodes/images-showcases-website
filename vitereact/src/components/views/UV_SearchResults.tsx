@@ -2,9 +2,9 @@ import React, { useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { useAppStore } from '@/store/main';
+
 import { Link } from 'react-router-dom';
-import { z } from 'zod';
+
 
 // Define the schema for the search results based on showcases
 interface ShowcaseItem {
@@ -34,18 +34,15 @@ const fetchShowcases = async (query: string): Promise<ShowcaseItem[]> => {
 const UV_SearchResults: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get('query') || '';
-  const isAuthenticated = useAppStore(state => state.authentication_state.authentication_status.is_authenticated);
+
   const [searchTerm, setSearchTerm] = useState(query);
   const [error, setError] = useState<string | null>(null);
 
-  const { data: searchResults, isLoading, isError } = useQuery<ShowcaseItem[], Error>(
-    ['searchResults', query],
-    () => fetchShowcases(query),
-    {
-      enabled: !!query, // Only run query if a query is provided
-      onError: (err) => setError(err.message),
-    }
-  );
+  const { data: searchResults, isPending: isLoading, isError } = useQuery<ShowcaseItem[], Error>({
+    queryKey: ['searchResults', query],
+    queryFn: () => fetchShowcases(query),
+    enabled: !!query,
+  });
 
   const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault();

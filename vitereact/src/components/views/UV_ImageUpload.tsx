@@ -31,25 +31,23 @@ const UV_ImageUpload: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
 
-  const uploadImagesMutation = useMutation(
-    async (data: FormData) => {
+  const uploadImagesMutation = useMutation({
+    mutationFn: async (data: FormData) => {
       return axios.post(
         `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/images`,
         data,
         { headers: { Authorization: `Bearer ${authToken}` } }
       );
     },
-    {
-      onSuccess: () => {
-        setUploadSuccess(true);
-        setSelectedFiles([]);
-        setImageMetadata({ title: '', description: '', tags: [], category_id: '' });
-      },
-      onError: (uploadError: any) => {
-        setError(uploadError.response ? uploadError.response.data.message : uploadError.message);
-      },
-    }
-  );
+    onSuccess: () => {
+      setUploadSuccess(true);
+      setSelectedFiles([]);
+      setImageMetadata({ title: '', description: '', tags: [], category_id: '' });
+    },
+    onError: (uploadError: any) => {
+      setError(uploadError.response ? uploadError.response.data.message : uploadError.message);
+    },
+  });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -156,9 +154,9 @@ const UV_ImageUpload: React.FC = () => {
           <button 
             type="submit"
             className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 focus:outline-none"
-            disabled={uploadImagesMutation.isLoading}
+            disabled={uploadImagesMutation.isPending}
           >
-            {uploadImagesMutation.isLoading ? 'Uploading...' : 'Upload'}
+            {uploadImagesMutation.isPending ? 'Uploading...' : 'Upload'}
           </button>
         </form>
       </div>

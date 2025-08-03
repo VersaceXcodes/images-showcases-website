@@ -51,8 +51,7 @@ const UV_Notifications: React.FC = () => {
                   <li key={notification.notification_id} className="border-t border-gray-200">
                     <Link to="/" className="block hover:bg-gray-50 focus:outline-none focus:bg-gray-50 transition duration-150 ease-in-out">
                       <div className="px-4 py-4 sm:px-6">
-                        <p className={`text-sm font-medium truncate ${notification.is_read ? 'text-gray-500' : 'text-gray-900'}`}>{notification.content}</p>
-                        <p className="mt-1 text-sm text-gray-500">{new Date(notification.created_at).toLocaleString()}</p>
+                         <p className={`text-sm font-medium truncate ${notification.is_read ? 'text-gray-500' : 'text-gray-900'}`}>{notification.message}</p>                        <p className="mt-1 text-sm text-gray-500">{new Date(notification.created_at).toLocaleString()}</p>
                       </div>
                     </Link>
                   </li>

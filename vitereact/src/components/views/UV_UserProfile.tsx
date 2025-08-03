@@ -2,27 +2,30 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { useAppStore } from '@/store/main';
-import { UserProfile as UserProfileType } from '@schema';
+
+import { UserProfileType } from '@/types';
 
 const fetchUserProfile = async (user_id: string): Promise<UserProfileType> => {
   const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/users/${user_id}`);
   return {
     user_id: data.user_id,
+    username: data.username,
+    email: data.email,
+    profile_picture: data.profile_picture,
     avatar_url: data.avatar_url,
     bio: data.bio,
     personal_links: data.personal_links || [],
     followers: data.followers,
+    following: data.following,
   };
 };
 
 const UV_UserProfile: React.FC = () => {
   const { user_id } = useParams<{ user_id: string }>();
-  const setUserProfile = useAppStore((state) => state.update_user_profile);
-  const { data, isLoading, error } = useQuery<UserProfileType, Error>({
+
+  const { data, isPending: isLoading, error } = useQuery<UserProfileType, Error>({
     queryKey: ['userProfile', user_id],
     queryFn: () => fetchUserProfile(user_id!),
-    onSuccess: setUserProfile,
   });
 
   return (
@@ -52,9 +55,8 @@ const UV_UserProfile: React.FC = () => {
                   <div className="mt-2">
                     <span className="text-sm text-gray-500">Followers: {data?.followers}</span>
                   </div>
-                  <div className="mt-2">
-                    {data?.personal_links.map((link, index) => (
-                      <a
+                   <div className="mt-2">
+                     {data?.personal_links?.map((link, index) => (                      <a
                         key={index}
                         href={link}
                         target="_blank"

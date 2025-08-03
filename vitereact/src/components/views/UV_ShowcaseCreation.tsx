@@ -24,8 +24,8 @@ const UV_ShowcaseCreation: React.FC = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
-  const createShowcaseMutation = useMutation(
-    async (showcaseData: NewShowcaseData) => {
+  const createShowcaseMutation = useMutation({
+    mutationFn: async (showcaseData: NewShowcaseData) => {
       const response = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/showcases`,
         { ...showcaseData, user_id: currentUser?.user_id },
@@ -38,16 +38,14 @@ const UV_ShowcaseCreation: React.FC = () => {
       );
       return response.data;
     },
-    {
-      onSuccess: (data) => {
-        queryClient.invalidateQueries(['showcases']);
-        navigate(`/showcase/${data.showcase_id}`);
-      },
-      onError: (error) => {
-        console.error("Error creating showcase:", error);
-      },
-    }
-  );
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['showcases'] });
+      navigate(`/showcase/${data.showcase_id}`);
+    },
+    onError: (error) => {
+      console.error("Error creating showcase:", error);
+    },
+  });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -114,10 +112,10 @@ const UV_ShowcaseCreation: React.FC = () => {
           <div>
             <button
               type="submit"
-              className={`inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 ${createShowcaseMutation.isLoading && 'cursor-not-allowed'}`}
-              disabled={createShowcaseMutation.isLoading}
+              className={`inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 ${createShowcaseMutation.isPending && 'cursor-not-allowed'}`}
+              disabled={createShowcaseMutation.isPending}
             >
-              {createShowcaseMutation.isLoading ? 'Creating...' : 'Create Showcase'}
+              {createShowcaseMutation.isPending ? 'Creating...' : 'Create Showcase'}
             </button>
           </div>
         </form>

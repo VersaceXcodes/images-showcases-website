@@ -328,3 +328,40 @@ export type Notification = z.infer<typeof notificationSchema>;
 export type CreateNotificationInput = z.infer<typeof createNotificationInputSchema>;
 export type UpdateNotificationInput = z.infer<typeof updateNotificationInputSchema>;
 export type SearchNotificationInput = z.infer<typeof searchNotificationInputSchema>;
+
+// Showcase Schema
+export const showcaseSchema = z.object({
+  showcase_id: z.string(),
+  user_id: z.string(),
+  title: z.string(),
+  description: z.string().nullable(),
+  tags: z.array(z.string()),
+  images: z.array(z.string()),
+  created_at: z.coerce.date(),
+});
+
+export const createShowcaseInputSchema = z.object({
+  user_id: z.string(),
+  title: z.string().min(1).max(255),
+  description: z.string().nullable().optional(),
+  tags: z.array(z.string()).optional(),
+  images: z.array(z.string()).optional(),
+});
+
+export type Showcase = z.infer<typeof showcaseSchema>;
+export type CreateShowcaseInput = z.infer<typeof createShowcaseInputSchema>;
+
+// User Profile Schema
+export const userProfileSchema = z.object({
+  user_id: z.string(),
+  username: z.string(),
+  email: z.string().email(),
+  profile_picture: z.string().url().nullable(),
+  bio: z.string().nullable(),
+  followers: z.number().int().nonnegative(),
+  following: z.number().int().nonnegative(),
+  personal_links: z.array(z.string()).nullable(),
+  avatar_url: z.string().url().nullable(),
+});
+
+export type UserProfile = z.infer<typeof userProfileSchema>;

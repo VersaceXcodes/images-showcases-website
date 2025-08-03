@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { Image } from '@schema'; // Example import for type safety
-import { useAppStore } from '@/store/main';
+
 
 const fetchImages = async (category: string, tag: string, sort: string): Promise<Image[]> => {
   const queryParams = new URLSearchParams();
@@ -14,13 +14,7 @@ const fetchImages = async (category: string, tag: string, sort: string): Promise
   const { data } = await axios.get<Image[]>(`\${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/images`, {
     params: queryParams,
   });
-  return data.map(img => ({
-    id: img.image_id,
-    url: img.url,
-    title: img.title,
-    description: img.description,
-    tags: Object.keys(img.tags || {}),
-  }));
+  return data;
 };
 
 const UV_Explore: React.FC = () => {
@@ -32,15 +26,10 @@ const UV_Explore: React.FC = () => {
 
   const [filteredImages, setFilteredImages] = useState<Image[]>([]);
   
-  const { data, isLoading, isError, error } = useQuery<Image[], Error>(
-    ['images', category, tag, sort],
-    () => fetchImages(category, tag, sort),
-    {
-      onSuccess: (data) => {
-        setFilteredImages(data);
-      },
-    }
-  );
+  const { data, isPending: isLoading, isError, error } = useQuery<Image[], Error>({
+    queryKey: ['images', category, tag, sort],
+    queryFn: () => fetchImages(category, tag, sort),
+  });
 
   useEffect(() => {
     if (data) {
@@ -82,12 +71,12 @@ const UV_Explore: React.FC = () => {
           {filteredImages.length > 0 ? (
             <div className="grid grid-cols-3 gap-4">
               {filteredImages.map((image) => (
-                <div key={image.id} className="bg-white p-4 shadow-sm rounded-lg">
-                  <Link to={`/image/${image.id}`}>
-                    <img src={image.url} alt={image.title} className="w-full h-48 object-cover rounded-lg" />
+                <div key={image.image_id} className="bg-white p-4 shadow-sm rounded-lg">
+                  <Link to={`/image/${image.image_id}`}>
+                    <img src={image.image_url} alt={image.title} className="w-full h-48 object-cover rounded-lg" />
                     <h3 className="mt-2 text-sm font-semibold">{image.title}</h3>
                     <p className="text-xs text-gray-600">{image.description}</p>
-                    <div className="text-xs text-gray-500">{Object.keys(image.tags).join(', ')}</div>
+                    <div className="text-xs text-gray-500">{image.categories || ''}</div>
                   </Link>
                 </div>
               ))}

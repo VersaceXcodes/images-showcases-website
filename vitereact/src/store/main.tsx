@@ -10,6 +10,7 @@ interface User {
   display_picture: string;
   bio: string | null;
   portfolio_link: string | null;
+  name: string;
 }
 
 interface Showcase {
@@ -53,6 +54,7 @@ interface AppState {
 
   // Actions - using snake_case as per your convention
   login_user: (email: string, password: string) => Promise<void>;
+  register_user: (email: string, username: string, password: string) => Promise<void>;
   logout_user: () => void;
   initialize_auth: () => Promise<void>;
   clear_auth_error: () => void;
@@ -74,7 +76,7 @@ export const useAppStore = create<AppState>()(
         authentication_status: { is_authenticated: false, is_loading: true },
         error_message: null,
       },
-      user_profile: { user_id: '', username: '', display_picture: '', bio: null, portfolio_link: null },
+      user_profile: { user_id: '', username: '', display_picture: '', bio: null, portfolio_link: null, name: '' },
       showcases: [],
       notifications: [],
 
@@ -97,7 +99,7 @@ export const useAppStore = create<AppState>()(
 
           const { user, token } = response.data;
 
-          set((state) => ({
+          set(() => ({
             authentication_state: {
               current_user: user,
               auth_token: token,
@@ -108,7 +110,48 @@ export const useAppStore = create<AppState>()(
           }));
         } catch (error: any) {
           const errorMessage = error.response?.data?.message || error.message || 'Login failed';
-          set((state) => ({
+          set(() => ({
+            authentication_state: {
+              current_user: null,
+              auth_token: null,
+              authentication_status: { is_authenticated: false, is_loading: false },
+              error_message: errorMessage,
+            },
+          }));
+          throw new Error(errorMessage);
+        }
+      },
+
+      register_user: async (email: string, username: string, password: string) => {
+        set((state) => ({
+          authentication_state: {
+            ...state.authentication_state,
+            authentication_status: { ...state.authentication_state.authentication_status, is_loading: true },
+            error_message: null,
+          },
+        }));
+
+        try {
+          const response = await axios.post(
+            `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/auth/register`,
+            { email, username, password_hash: password },
+            { headers: { 'Content-Type': 'application/json' } }
+          );
+
+          const { user, token } = response.data;
+
+          set(() => ({
+            authentication_state: {
+              current_user: user,
+              auth_token: token,
+              authentication_status: { is_authenticated: true, is_loading: false },
+              error_message: null,
+            },
+            user_profile: user,
+          }));
+        } catch (error: any) {
+          const errorMessage = error.response?.data?.message || error.message || 'Registration failed';
+          set(() => ({
             authentication_state: {
               current_user: null,
               auth_token: null,
@@ -141,7 +184,7 @@ export const useAppStore = create<AppState>()(
           );
 
           const user = response.data;
-          set((state) => ({
+          set(() => ({
             authentication_state: {
               current_user: user,
               auth_token: token,
@@ -151,7 +194,7 @@ export const useAppStore = create<AppState>()(
             user_profile: user,
           }));
         } catch {
-          set((state) => ({
+          set(() => ({
             authentication_state: {
               current_user: null,
               auth_token: null,
@@ -163,7 +206,7 @@ export const useAppStore = create<AppState>()(
       },
 
       logout_user: () => {
-        set((state) => ({
+        set(() => ({
           authentication_state: {
             current_user: null,
             auth_token: null,

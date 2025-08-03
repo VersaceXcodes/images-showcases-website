@@ -8,7 +8,7 @@ import { Image } from '@schema';
 const UV_BrowseGallery: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [category, setCategory] = useState('');
-  const [sortOrder, setSortOrder] = useState('asc');
+  const [sortOrder] = useState('asc');
   const limit = 10;
   const offset = 0;
 
@@ -21,10 +21,9 @@ const UV_BrowseGallery: React.FC = () => {
     return data;
   };
 
-  const { data: images, isLoading, isError, error } = useQuery<Image[], Error>({
+  const { data: images, isPending: isLoading, isError, error } = useQuery<Image[], Error>({
     queryKey: ['images', searchQuery, category, sortOrder, limit, offset],
     queryFn: fetchImages,
-    keepPreviousData: true,
   });
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -35,7 +34,7 @@ const UV_BrowseGallery: React.FC = () => {
     setCategory(e.target.value);
   };
 
-  const handleImageClick = (image_id: string) => {
+  const handleImageClick = () => {
     // Placeholder for authentication check action
     if (isAuthenticated) {
       // Implement liking functionality
@@ -67,7 +66,7 @@ const UV_BrowseGallery: React.FC = () => {
           {isError && <div>Error loading images: {error?.message}</div>}
           {images?.map((image) => (
             <div key={image.image_id} className="border rounded-md overflow-hidden shadow-md">
-              <Link to={`/image/${image.image_id}`} onClick={() => handleImageClick(image.image_id)}>
+              <Link to={`/image/${image.image_id}`} onClick={handleImageClick}>
                 <img src={image.image_url} alt={image.title} className="w-full h-48 object-cover" />
                 <div className="p-2">
                   <h3 className="font-bold text-lg">{image.title}</h3>

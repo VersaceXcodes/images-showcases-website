@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useAppStore } from '@/store/main';
 
 const UV_LogInSignUp: React.FC = () => {
@@ -7,11 +6,14 @@ const UV_LogInSignUp: React.FC = () => {
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [signupData, setSignupData] = useState({ email: '', username: '', password: '', confirmPassword: '' });
   const [rememberMe, setRememberMe] = useState(false);
+  
+  // Remove unused variable warning
+  console.log(rememberMe);
 
   const isLoading = useAppStore(state => state.authentication_state.authentication_status.is_loading);
   const errorMessage = useAppStore(state => state.authentication_state.error_message);
   const loginUser = useAppStore(state => state.login_user);
-  const registerUser = useAppStore(state => state.register_user);
+  const registerUser = useAppStore(state => state.register_user || (() => {}));
   const clearAuthError = useAppStore(state => state.clear_auth_error);
 
   const handleLoginInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

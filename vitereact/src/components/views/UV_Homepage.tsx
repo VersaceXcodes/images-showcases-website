@@ -16,13 +16,11 @@ const UV_Homepage: React.FC = () => {
   const category = new URLSearchParams(window.location.search).get('filter');
   const isAuthenticated = useAppStore(state => state.authentication_state.authentication_status.is_authenticated);
 
-  const { data: showcases, isLoading, isError, refetch } = useQuery<Showcase[], Error>(
-    ['showcases', category],
-    () => fetchShowcases(category || undefined), // Handle optional category filter
-    {
-      enabled: !!category || true, // Ensure query runs initially or when category is defined
-    }
-  );
+  const { data: showcases, isPending: isLoading, isError, refetch } = useQuery<Showcase[], Error>({
+    queryKey: ['showcases', category],
+    queryFn: () => fetchShowcases(category || undefined),
+    enabled: !!category || true,
+  });
 
   useEffect(() => {
     refetch();
@@ -53,10 +51,9 @@ const UV_Homepage: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8 px-4 sm:px-6 lg:px-8">
             {showcases.map((showcase) => (
               <div key={showcase.showcase_id} className="bg-white shadow rounded overflow-hidden">
-                {showcase.images.length > 0 && (
-                  <img src={showcase.images[0].url} alt={showcase.title} className="w-full h-48 object-cover" />
-                )}
-                <div className="p-4">
+                 {showcase.images.length > 0 && (
+                   <img src={showcase.images[0].image_url} alt={showcase.title} className="w-full h-48 object-cover" />
+                 )}                <div className="p-4">
                   <h3 className="font-semibold text-lg">{showcase.title}</h3>
                   <p className="mt-1 text-gray-600">{showcase.description}</p>
                   <div className="mt-2">

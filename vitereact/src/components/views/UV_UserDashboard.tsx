@@ -23,16 +23,13 @@ const fetchUserDashboardData = async (authToken: string): Promise<ActivitySummar
 
 const UV_UserDashboard: React.FC = () => {
   const auth_token = useAppStore(state => state.authentication_state.auth_token);
-  const [activitySummary, setActivitySummary] = useState<ActivitySummary>({ uploads: 0, likes_received: 0, comments: 0 });
+  const [activitySummary] = useState<ActivitySummary>({ uploads: 0, likes_received: 0, comments: 0 });
 
-  const { data, isLoading, isError } = useQuery<ActivitySummary>(
-    ['dashboardData', auth_token],
-    () => fetchUserDashboardData(auth_token || ''),
-    {
-      enabled: !!auth_token,
-      onSuccess: data => setActivitySummary(data)
-    }
-  );
+  const { isPending: isLoading, isError } = useQuery<ActivitySummary>({
+    queryKey: ['dashboardData', auth_token],
+    queryFn: () => fetchUserDashboardData(auth_token || ''),
+    enabled: !!auth_token,
+  });
 
   useEffect(() => {
     if (isError) {

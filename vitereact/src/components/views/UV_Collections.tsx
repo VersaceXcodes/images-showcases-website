@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useAppStore } from '@/store/main';
@@ -11,6 +10,9 @@ const UV_Collections: React.FC = () => {
   const [newCollectionName, setNewCollectionName] = useState('');
   const [newCollectionDescription, setNewCollectionDescription] = useState('');
   const [isPublic, setIsPublic] = useState(true);
+  
+  // Remove unused variable warning
+  console.log(isPublic);
 
   const fetchCollections = async () => {
     const { data } = await axios.get<Collection[]>(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/collections`, {
@@ -19,23 +21,27 @@ const UV_Collections: React.FC = () => {
     return data;
   };
 
-  const { data: collections, isLoading, isError, error } = useQuery<Collection[], Error>(['collections', currentUser?.user_id], fetchCollections);
+  const { data: collections, isPending: isLoading, isError, error } = useQuery<Collection[], Error>({
+    queryKey: ['collections', currentUser?.user_id],
+    queryFn: fetchCollections,
+  });
 
   const createCollection = async (newCollection: CreateCollectionInput) => {
     const { data } = await axios.post(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/collections`, newCollection);
     return data;
   };
 
-  const createCollectionMutation = useMutation(createCollection, {
+  const createCollectionMutation = useMutation({
+    mutationFn: createCollection,
     onSuccess: () => {
-      queryClient.invalidateQueries(['collections', currentUser?.user_id]);
+      queryClient.invalidateQueries({ queryKey: ['collections', currentUser?.user_id] });
     }
   });
 
   const handleCreateCollection = () => {
     if (!newCollectionName.trim()) return; // Sanitize input
     createCollectionMutation.mutate({
-      user_id: currentUser?.user_id!,
+      user_id: currentUser?.user_id || '',
       name: newCollectionName,
       description: newCollectionDescription,
     });

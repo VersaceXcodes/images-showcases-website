@@ -11,7 +11,7 @@ const UV_Registration: React.FC = () => {
 
   const isLoading = useAppStore((state) => state.authentication_state.authentication_status.is_loading);
   const errorMessage = useAppStore((state) => state.authentication_state.error_message);
-  const auth_token = useAppStore((state) => state.authentication_state.auth_token);
+
   const clearAuthError = useAppStore((state) => state.clear_auth_error);
 
   const registerUser = async () => {

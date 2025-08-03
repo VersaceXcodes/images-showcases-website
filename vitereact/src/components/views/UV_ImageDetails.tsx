@@ -25,17 +25,17 @@ const UV_ImageDetails: React.FC = () => {
   const currentUser = useAppStore(state => state.authentication_state.current_user);
   const authToken = useAppStore(state => state.authentication_state.auth_token);
   
-  const imageQuery = useQuery<Image, Error>(
-    ['imageDetails', image_id],
-    () => fetchImageDetails(image_id!),
-    { enabled: !!image_id }
-  );
+  const imageQuery = useQuery<Image, Error>({
+    queryKey: ['imageDetails', image_id],
+    queryFn: () => fetchImageDetails(image_id!),
+    enabled: !!image_id,
+  });
 
-  const relatedImagesQuery = useQuery<Image[], Error>(
-    ['relatedImages', imageQuery.data?.categories],
-    () => fetchRelatedImages(imageQuery.data!.title, imageQuery.data!.categories || ''),
-    { enabled: !!imageQuery.data?.title }
-  );
+  const relatedImagesQuery = useQuery<Image[], Error>({
+    queryKey: ['relatedImages', imageQuery.data?.categories],
+    queryFn: () => fetchRelatedImages(imageQuery.data!.title, imageQuery.data!.categories || ''),
+    enabled: !!imageQuery.data?.title,
+  });
 
   const createComment = useMutation<Comment, Error, CreateCommentInput>({
     mutationFn: async (newComment) => {

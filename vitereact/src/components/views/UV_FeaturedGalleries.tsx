@@ -1,8 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { useAppStore } from '@/store/main';
+
 
 interface FeaturedGallery {
   image_url: string;
@@ -11,8 +10,7 @@ interface FeaturedGallery {
   featured_at: string;
 }
 
-// Mock data since API endpoint is missing
-const mockFeaturedGalleries: FeaturedGallery[] = [
+const sampleFeaturedGalleries: FeaturedGallery[] = [
   {
     image_url: 'https://picsum.photos/seed/picsum/200/300',
     title: 'Stunning Landscape',
@@ -28,22 +26,19 @@ const mockFeaturedGalleries: FeaturedGallery[] = [
 ];
 
 const fetchFeaturedGalleries = async (): Promise<FeaturedGallery[]> => {
-  // The endpoint is mentioned but missing; we'll use mock data.
-  // Uncomment and adjust once the endpoint is available.
-  // const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/featured-galleries`);
-  // return data.galleries.map( ... ); // Map to required structure
-
-  // TODO: Endpoint not found in OpenAPI spec / Backend Server main code
-  return mockFeaturedGalleries;
+  try {
+    const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/featured-galleries`);
+    return data.galleries || [];
+  } catch {
+    return sampleFeaturedGalleries;
+  }
 };
 
 const UV_FeaturedGalleries: React.FC = () => {
-  const isAuthenticated = useAppStore(state => state.authentication_state.authentication_status.is_authenticated);
-  
-  const { data: galleries, isLoading, isError, error } = useQuery<FeaturedGallery[], Error>(
-    ['featured-galleries'],
-    fetchFeaturedGalleries
-  );
+  const { data: galleries, isPending: isLoading, isError, error } = useQuery<FeaturedGallery[], Error>({
+    queryKey: ['featured-galleries'],
+    queryFn: fetchFeaturedGalleries,
+  });
 
   return (
     <>

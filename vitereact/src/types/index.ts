@@ -7,7 +7,7 @@ export interface User {
   profile_picture: string | null;
   created_at: Date;
   auth_token: string | null;
-  name?: string;
+  name: string;
 }
 
 export interface CreateUserInput {
@@ -162,6 +162,16 @@ export interface NewShowcaseData {
   description: string;
   tags: string[];
   images: string[];
+}
+
+export interface Showcase {
+  showcase_id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  tags: string[];
+  images: Image[];
+  created_at: Date;
 }
 
 // API Response types
