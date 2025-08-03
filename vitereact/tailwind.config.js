@@ -1,3 +1,5 @@
+import tailwindcssAnimate from "tailwindcss-animate";
+
 /** @type {import('tailwindcss').Config} */
 export default {
 	darkMode: ["class"],
@@ -24,7 +26,7 @@ export default {
 						height: "var(--radix-accordion-content-height)",
 					},
 					to: {
-						height: "0",
+						height: "var(--radix-accordion-content-height)",
 					},
 				},
 			},
@@ -34,5 +36,5 @@ export default {
 			},
 		},
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [tailwindcssAnimate],
 };
