@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import axios from 'axios';
 import { io, Socket } from 'socket.io-client';
+import { API_BASE_URL } from '@/lib/api';
 
 // Types
 interface User {
@@ -92,7 +93,7 @@ export const useAppStore = create<AppState>()(
 
         try {
           const response = await axios.post(
-            `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/auth/login`,
+            `${API_BASE_URL}/auth/login`,
             { email, password },
             { headers: { 'Content-Type': 'application/json' } }
           );
@@ -133,7 +134,7 @@ export const useAppStore = create<AppState>()(
 
         try {
           const response = await axios.post(
-            `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/auth/register`,
+            `${API_BASE_URL}/auth/register`,
             { email, username, password_hash: password },
             { headers: { 'Content-Type': 'application/json' } }
           );
@@ -179,7 +180,7 @@ export const useAppStore = create<AppState>()(
 
         try {
           const response = await axios.get(
-            `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/users/${authentication_state.current_user?.user_id}`,
+            `${API_BASE_URL}/users/${authentication_state.current_user?.user_id}`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
 
@@ -231,7 +232,7 @@ export const useAppStore = create<AppState>()(
 
         try {
           const response = await axios.get(
-            `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/notifications`,
+            `${API_BASE_URL}/notifications`,
             {
               headers: { Authorization: `Bearer ${token}` },
             }
@@ -252,7 +253,7 @@ export const useAppStore = create<AppState>()(
         socket: null,
         connectSocket: () => {
           if (!get().real_time.socket) {
-            const socket = io(import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000', {
+            const socket = io(API_BASE_URL.replace('/api', ''), {
               auth: { token: get().authentication_state.auth_token },
             });
 

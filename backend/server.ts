@@ -118,7 +118,7 @@ const authenticateToken = (req, res, next) => {
 // --------------------- REST API Routes ---------------------
 
 // User Registration
-app.post('/auth/register', async (req, res) => {
+app.post('/api/auth/register', async (req, res) => {
   try {
     const validatedBody = createUserInputSchema.parse(req.body);
 
@@ -152,7 +152,7 @@ app.post('/auth/register', async (req, res) => {
 });
 
 // User Login
-app.post('/auth/login', async (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -181,7 +181,7 @@ app.post('/auth/login', async (req, res) => {
 });
 
 // Upload Image
-app.post('/images', authenticateToken, upload.single('image'), async (req, res) => {
+app.post('/api/images', authenticateToken, upload.single('image'), async (req, res) => {
   try {
     const imageUrl = `/storage/${req.file.filename}`;
     const validatedBody = createImageInputSchema.parse({
@@ -203,7 +203,7 @@ app.post('/images', authenticateToken, upload.single('image'), async (req, res) 
 });
 
 // Search Images
-app.get('/images/search', async (req, res) => {
+app.get('/api/images/search', async (req, res) => {
   try {
     const searchParams = searchImageInputSchema.parse(req.query);
     const result = await pool.query(
@@ -220,7 +220,7 @@ app.get('/images/search', async (req, res) => {
 });
 
 // Add Comment
-app.post('/comments', authenticateToken, async (req, res) => {
+app.post('/api/comments', authenticateToken, async (req, res) => {
   try {
     const validatedBody = createCommentInputSchema.parse(req.body);
     const result = await pool.query(
@@ -240,7 +240,7 @@ app.post('/comments', authenticateToken, async (req, res) => {
 });
 
 // Add Like
-app.post('/likes', authenticateToken, async (req, res) => {
+app.post('/api/likes', authenticateToken, async (req, res) => {
   try {
     const validatedBody = createLikeInputSchema.parse(req.body);
     const result = await pool.query(
@@ -259,7 +259,7 @@ app.post('/likes', authenticateToken, async (req, res) => {
 });
 
 // Follow User
-app.post('/follows', authenticateToken, async (req, res) => {
+app.post('/api/follows', authenticateToken, async (req, res) => {
   try {
     const validatedBody = createFollowInputSchema.parse(req.body);
     const result = await pool.query(
@@ -277,16 +277,33 @@ app.post('/follows', authenticateToken, async (req, res) => {
   }
 });
 
-// Notifications List
-app.get('/notifications', authenticateToken, async (req, res) => {
+// Get User Details
+app.get('/api/users/:user_id', authenticateToken, async (req, res) => {
   try {
-    const { user_id, limit, offset, sort_by, sort_order } = req.query;
+    const { user_id } = req.params;
+    const result = await pool.query('SELECT user_id, email, username, profile_picture, created_at FROM users WHERE user_id = $1', [user_id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Get user error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Notifications List
+app.get('/api/notifications', authenticateToken, async (req, res) => {
+  try {
+    const { user_id, limit = 10, offset = 0, sort_by = 'created_at', sort_order = 'DESC' } = req.query;
     
     const result = await pool.query(
       `SELECT * FROM notifications WHERE user_id = $1 
       ORDER BY ${sort_by} ${sort_order}
       LIMIT $2 OFFSET $3`,
-      [user_id, limit, offset]
+      [user_id || req.user.user_id, limit, offset]
     );
 
     res.json(result.rows);
