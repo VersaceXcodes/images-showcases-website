@@ -1,78 +1,60 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import { useAppStore } from '@/store/main';
-import { Image } from '@schema';
-
-const fetchFeaturedImages = async (): Promise<Image[]> => {
-  const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/images?limit=10`, {
-    params: {
-      sort_order: 'asc', // or another config value
-    },
-  });
-  return data.map((item: any) => ({
-    image_id: item.image_id,
-    title: item.title,
-    image_url: item.image_url,
-  }));
-};
 
 const UV_Landing: React.FC = () => {
-  const isAuthenticated = useAppStore(state => state.authentication_state.authentication_status.is_authenticated);
-  
-  const { data: featuredImages, isLoading, error } = useQuery<Image[], Error>(
-    ['featuredImages'],
-    fetchFeaturedImages
-  );
+  const isAuthenticated = useAppStore((state) => state.authentication_state.authentication_status.is_authenticated);
+  const currentUser = useAppStore((state) => state.authentication_state.current_user);
+
+  // TODO: This should be replaced with actual API data fetching.
+  const featuredImages = [
+    { id: '1', title: 'Sunset Horizon', imageUrl: 'https://picsum.photos/id/1018/600/400' },
+    { id: '2', title: 'Forest Path', imageUrl: 'https://picsum.photos/id/1015/600/400' },
+    { id: '3', title: 'Desert Dunes', imageUrl: 'https://picsum.photos/id/1016/600/400' },
+  ];
 
   return (
     <>
-      <div className="bg-white min-h-screen flex flex-col">
-        <header className="py-5 bg-blue-500 text-white text-center">
-          <h1 className="text-3xl font-bold">Discover Amazing Images</h1>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-10">
+        <header className="mb-8 text-center">
+          <h1 className="text-4xl font-bold text-gray-900">Discover Stunning Images</h1>
+          <p className="mt-2 text-gray-600">Join our community of photographers and art lovers.</p>
         </header>
-        
-        <main className="flex-1 mx-auto max-w-7xl px-4 py-8">
-          {isLoading && (
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p>Loading featured images...</p>
-            </div>
-          )}
 
-          {error && (
-            <div className="text-center text-red-600">
-              <p>Error loading images: {error.message}</p>
-            </div>
-          )}
-
-          {featuredImages && (
-            <div className="carousel space-y-8">
+        {featuredImages.length > 0 && (
+          <div className="mb-12">
+            <div className="flex overflow-x-scroll space-x-4">
               {featuredImages.map((image) => (
-                <div key={image.image_id} className="relative">
-                  <img src={image.image_url} alt={image.title} className="w-full object-cover rounded-lg shadow" />
-                  <div className="absolute bottom-0 left-0 bg-blue-500 bg-opacity-75 text-white p-4 rounded-br-lg">
-                    <h2 className="text-lg font-bold">{image.title}</h2>
-                  </div>
+                <div key={image.id} className="flex-none w-64">
+                  <img src={image.imageUrl} alt={image.title} className="w-full h-40 object-cover rounded-md shadow-md" />
+                  <p className="mt-2 text-center text-gray-800">{image.title}</p>
                 </div>
               ))}
             </div>
-          )}
-          
-          <div className="mt-8 text-center">
-            {!isAuthenticated ? (
-              <>
-                <p className="mb-4 text-lg font-medium">Join our community to explore and share your own images!</p>
-                <Link to="/register" className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow hover:bg-blue-700">
-                  Sign Up Now
-                </Link>
-              </>
-            ) : (
-              <p className="text-lg font-medium">Welcome back! Explore featured images above.</p>
-            )}
           </div>
-        </main>
+        )}
+
+        <div className="text-center mt-4">
+          {isAuthenticated ? (
+            <Link to={`/profile/${currentUser?.user_id}`} className="text-blue-600 hover:underline text-lg">
+              Visit your profile
+            </Link>
+          ) : (
+            <>
+              <Link to="/register" className="inline-block text-white bg-blue-600 px-6 py-2 rounded-full text-lg font-semibold hover:bg-blue-700">
+                Sign Up
+              </Link>
+              <span className="mx-4 text-gray-500">or</span>
+              <Link to="/login" className="text-blue-600 hover:underline text-lg">
+                Log In
+              </Link>
+            </>
+          )}
+        </div>
+
+        <footer className="mt-auto text-center pt-8 text-gray-500">
+          <p>&copy; 2023 Image Gallery Showcase</p>
+        </footer>
       </div>
     </>
   );

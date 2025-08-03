@@ -1,0 +1,104 @@
+import React, { useEffect, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
+import { Image } from '@schema'; // Example import for type safety
+import { useAppStore } from '@/store/main';
+
+const fetchImages = async (category: string, tag: string, sort: string): Promise<Image[]> => {
+  const queryParams = new URLSearchParams();
+  if (category) queryParams.append('category_id', category);
+  if (tag) queryParams.append('tag', tag);
+  if (sort) queryParams.append('sort_order', sort);
+
+  const { data } = await axios.get<Image[]>(`\${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/images`, {
+    params: queryParams,
+  });
+  return data.map(img => ({
+    id: img.image_id,
+    url: img.url,
+    title: img.title,
+    description: img.description,
+    tags: Object.keys(img.tags || {}),
+  }));
+};
+
+const UV_Explore: React.FC = () => {
+  const { search } = useLocation();
+  const params = new URLSearchParams(search);
+  const category = params.get('category') || '';
+  const tag = params.get('tag') || '';
+  const sort = params.get('sort') || '';
+
+  const [filteredImages, setFilteredImages] = useState<Image[]>([]);
+  
+  const { data, isLoading, isError, error } = useQuery<Image[], Error>(
+    ['images', category, tag, sort],
+    () => fetchImages(category, tag, sort),
+    {
+      onSuccess: (data) => {
+        setFilteredImages(data);
+      },
+    }
+  );
+
+  useEffect(() => {
+    if (data) {
+      setFilteredImages(data);
+    }
+  }, [data]);
+
+  return (
+    <>
+      <div className="min-h-screen bg-gray-50 flex">
+        <aside className="w-1/4 p-4 bg-white">
+          <h2 className="text-lg font-bold mb-4">Filter</h2>
+          <div>
+            {/* Add filter UI elements: category, tag, sort */}
+            {/* Example static filter options, replace with dynamic options from API as needed */}
+            <h3 className="font-semibold">Categories</h3>
+            <ul>
+              <li>
+                <Link to={`/explore?category=landscapes`} className="text-blue-600 hover:underline">
+                  Landscapes
+                </Link>
+              </li>
+              {/* More filters */}
+            </ul>
+            <h3 className="font-semibold mt-4">Sort by</h3>
+            <ul>
+              <li>
+                <Link to={`/explore?sort=newest`} className="text-blue-600 hover:underline">
+                  Newest
+                </Link>
+              </li>
+              {/* More sort options */}
+            </ul>
+          </div>
+        </aside>
+        <main className="flex-1 p-6">
+          {isLoading && <p>Loading images...</p>}
+          {isError && <p>Error loading images: {error?.message}</p>}
+          {filteredImages.length > 0 ? (
+            <div className="grid grid-cols-3 gap-4">
+              {filteredImages.map((image) => (
+                <div key={image.id} className="bg-white p-4 shadow-sm rounded-lg">
+                  <Link to={`/image/${image.id}`}>
+                    <img src={image.url} alt={image.title} className="w-full h-48 object-cover rounded-lg" />
+                    <h3 className="mt-2 text-sm font-semibold">{image.title}</h3>
+                    <p className="text-xs text-gray-600">{image.description}</p>
+                    <div className="text-xs text-gray-500">{Object.keys(image.tags).join(', ')}</div>
+                  </Link>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p>No images found for the selected parameters.</p>
+          )}
+        </main>
+      </div>
+    </>
+  );
+};
+
+export default UV_Explore;

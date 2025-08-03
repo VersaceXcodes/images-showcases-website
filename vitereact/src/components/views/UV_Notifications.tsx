@@ -1,62 +1,66 @@
-import React, { useEffect } from 'react';
-import { useAppStore } from '@/store/main';
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+import { useAppStore } from '@/store/main';
 import { Notification } from '@schema';
 import { Link } from 'react-router-dom';
 
-const fetchUserNotifications = async (authToken: string, userId: string): Promise<Notification[]> => {
+const fetchNotifications = async (token: string | null): Promise<Notification[]> => {
+  if (!token) throw new Error("Missing authentication token");
   const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/notifications`, {
-    headers: { Authorization: `Bearer ${authToken}` },
-    params: { user_id: userId }
+    headers: { Authorization: `Bearer ${token}` },
   });
   return data;
 };
 
 const UV_Notifications: React.FC = () => {
-  const notifications = useAppStore(state => state.notifications);
-  const fetchNotifications = useAppStore(state => state.fetch_notifications);
-  const authToken = useAppStore(state => state.authentication_state.auth_token);
-  const currentUser = useAppStore(state => state.authentication_state.current_user);
-
-  const { isLoading, isError, error } = useQuery(
-    ['notifications', currentUser?.user_id],
-    () => fetchUserNotifications(authToken as string, currentUser?.user_id as string),
-    {
-      onSuccess: fetchNotifications,
-      enabled: Boolean(authToken && currentUser?.user_id),
-    }
-  );
-
-  useEffect(() => {
-    if (currentUser && currentUser.user_id) {
-      fetchNotifications();
-    }
-  }, [currentUser, fetchNotifications]);
+  const auth_token = useAppStore(state => state.authentication_state.auth_token);
+  const { data: notifications = [], isLoading, isError, error } = useQuery<Notification[], Error>({
+    queryKey: ['notifications'],
+    queryFn: () => fetchNotifications(auth_token),
+    enabled: !!auth_token,
+  });
 
   return (
     <>
-      <div className="min-h-screen bg-gray-50 p-6">
-        <h1 className="text-2xl font-bold mb-4">Notifications</h1>
-        {isLoading && <p>Loading notifications...</p>}
-        {isError && <p className="text-red-500">Error fetching notifications: {error?.message}</p>}
-        <ul className="bg-white shadow-md rounded-lg">
-          {notifications.map(notification => (
-            <li
-              key={notification.notification_id}
-              className={`p-4 border-b last:border-none ${notification.is_read ? 'bg-gray-100' : 'bg-white'}`}
-              aria-live="polite"
-            >
-              <p className="text-sm">{notification.message}</p>
-              <small className="text-gray-500">{new Date(notification.created_at).toLocaleString()}</small>
-            </li>
-          ))}
-        </ul>
-        <div className="mt-4">
-          <Link to="/notifications/preferences" className="text-blue-600 hover:underline">
-            Notification Preferences
-          </Link>
-        </div>
+      <div className="min-h-screen bg-gray-50">
+        <nav className="bg-white shadow">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between h-16">
+              <div className="flex items-center">
+                <h1 className="text-xl font-semibold text-gray-900">Notifications</h1>
+              </div>
+            </div>
+          </div>
+        </nav>
+        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="px-4 py-6 sm:px-0">
+            {isLoading && (
+              <div className="bg-gray-50 border-l-4 border-blue-500 text-blue-700 p-4" role="alert" aria-live="polite">
+                <p className="text-sm">Loading notifications...</p>
+              </div>
+            )}
+            {isError && (
+              <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4" role="alert" aria-live="polite">
+                <p className="text-sm">Error: {error?.message}</p>
+              </div>
+            )}
+            {!isLoading && !isError && (
+              <ul role="list" className="bg-white shadow overflow-hidden sm:rounded-md">
+                {notifications.map((notification) => (
+                  <li key={notification.notification_id} className="border-t border-gray-200">
+                    <Link to="/" className="block hover:bg-gray-50 focus:outline-none focus:bg-gray-50 transition duration-150 ease-in-out">
+                      <div className="px-4 py-4 sm:px-6">
+                        <p className={`text-sm font-medium truncate ${notification.is_read ? 'text-gray-500' : 'text-gray-900'}`}>{notification.content}</p>
+                        <p className="mt-1 text-sm text-gray-500">{new Date(notification.created_at).toLocaleString()}</p>
+                      </div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </main>
       </div>
     </>
   );

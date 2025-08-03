@@ -73,7 +73,8 @@
     "zustand": "*",
     "react-icons": "*",
     "dependencies": "*",
-    "zustand/middleware": "*"
+    "zustand/middleware": "*",
+    "@schema": "*"
   },
   "devDependencies": {
     "@eslint/js": "^9.8.0",

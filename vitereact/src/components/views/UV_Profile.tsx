@@ -1,65 +1,141 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect, FC } from 'react';
+import { useParams } from 'react-router-dom';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import axios from 'axios';
 import { useAppStore } from '@/store/main';
-import { useQuery } from '@tanstack/react-query';
-import type { User } from '@schema'; // Import the User type from Zod schema
-import { userSchema } from '@schema'; // Validate against Zod schema for robustness
 
-const UV_Profile: React.FC = () => {
+interface UserProfile {
+  user_id: string;
+  email: string;
+  username: string;
+  profile_picture: string | null;
+}
+
+interface Image {
+  image_id: string;
+  title: string;
+  description: string | null;
+  image_url: string;
+}
+
+const fetchUserProfile = async (user_id: string): Promise<UserProfile> => {
+  const { data } = await axios.get<UserProfile>(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/users/${user_id}`);
+  return data;
+};
+
+const fetchUserImages = async (user_id: string): Promise<Image[]> => {
+  const { data } = await axios.get<Image[]>(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/images/search?query=${user_id}`);
+  return data;
+};
+
+const UV_Profile: FC = () => {
   const { user_id } = useParams<{ user_id: string }>();
   const currentUser = useAppStore(state => state.authentication_state.current_user);
+  const [isEditing, setIsEditing] = useState(false);
+  const [updatedUsername, setUpdatedUsername] = useState('');
+  const [updatedEmail, setUpdatedEmail] = useState('');
 
-  const { data: userProfile, error, isLoading } = useQuery<User, Error>({
-    queryKey: ['userProfile', user_id],
-    queryFn: async () => {
-      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/users/${user_id}`);
-      return userSchema.parse(response.data); // Validate using Zod schema
-    },
-    enabled: !!user_id, // Disable query if user_id is not available
+  const { data: userProfile, isLoading: loadingProfile } = useQuery(['userProfile', user_id], () => fetchUserProfile(user_id!), {
+    enabled: !!user_id
   });
+
+  const { data: userImages, isLoading: loadingImages } = useQuery(['userImages', user_id], () => fetchUserImages(user_id!), {
+    enabled: !!user_id
+  });
+
+  const updateUser = useMutation(async () => {
+    if (userProfile) {
+      await axios.put(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/users/${userProfile.user_id}`, {
+        username: updatedUsername,
+        email: updatedEmail,
+      });
+    }
+  });
+
+  const handleSave = async () => {
+    try {
+      await updateUser.mutateAsync();
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Update failed', error);
+    }
+  };
+
+  useEffect(() => {
+    if (userProfile) {
+      setUpdatedUsername(userProfile.username);
+      setUpdatedEmail(userProfile.email);
+    }
+  }, [userProfile]);
+
+  if (loadingProfile || loadingImages) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <>
-      <div className="max-w-4xl mx-auto py-8 px-4">
-        {isLoading ? (
-          <div className="text-center">
-            <div className="animate-spin h-8 w-8 border-t-2 border-b-2 border-blue-600 rounded-full mx-auto"></div>
-          </div>
-        ) : error ? (
-          <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-md">
-            <p className="text-sm" aria-live="polite">Error loading profile: {error.message}</p>
-          </div>
-        ) : userProfile ? (
-          <div className="bg-white shadow-md rounded-lg p-6">
-            <div className="flex items-center space-x-4">
-              {userProfile.profile_picture && (
-                <img src={userProfile.profile_picture} alt="Profile" className="h-16 w-16 rounded-full" />
-              )}
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">{userProfile.username}</h2>
-                <p className="text-sm text-gray-600">Joined on {new Date(userProfile.created_at).toLocaleDateString()}</p>
-                <p className="text-sm text-gray-500">{userProfile.email}</p>
+      <div className="container mx-auto p-4">
+        {userProfile && (
+          <div>
+            <div className="flex items-center mb-6">
+              <img
+                src={userProfile.profile_picture || 'https://picsum.photos/200'}
+                alt={`${userProfile.username}'s profile`}
+                className="w-24 h-24 rounded-full"
+              />
+              <div className="ml-4">
+                {isEditing ? (
+                  <>
+                    <input 
+                      type="text"
+                      className="border rounded p-1"
+                      value={updatedUsername}
+                      onChange={e => setUpdatedUsername(e.target.value)}
+                    />
+                    <input 
+                      type="email"
+                      className="border rounded p-1 mt-1"
+                      value={updatedEmail}
+                      onChange={e => setUpdatedEmail(e.target.value)}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <h1 className="text-xl font-bold">{userProfile.username}</h1>
+                    <p className="text-sm">{userProfile.email}</p>
+                    {currentUser?.user_id === user_id && (
+                      <button
+                        onClick={() => setIsEditing(true)}
+                        className="text-blue-600 mt-2 hover:underline"
+                      >
+                        Edit Profile
+                      </button>
+                    )}
+                  </>
+                )}
+                {isEditing && (
+                  <button
+                    onClick={handleSave}
+                    className="text-green-600 mt-2 hover:underline"
+                  >
+                    Save
+                  </button>
+                )}
               </div>
             </div>
-
-            {currentUser?.id === user_id && (
-              <div className="mt-4">
-                <Link to="/edit-profile" className="text-blue-600 hover:text-blue-800">Edit Profile</Link>
+            <div>
+              <h2 className="text-lg font-semibold">Uploaded Images</h2>
+              <div className="grid grid-cols-3 gap-4 mt-4">
+                {userImages?.map((image) => (
+                  <div key={image.image_id} className="bg-gray-200 p-2 rounded">
+                    <img src={image.image_url} alt={image.title} className="w-full h-48 object-cover rounded" />
+                    <h3 className="text-center mt-2">{image.title}</h3>
+                  </div>
+                ))}
               </div>
-            )}
-
-            <div className="mt-4">
-              {userProfile.bio && <p className="text-gray-700">{userProfile.bio}</p>}
-            </div>
-
-            <div className="mt-6 flex space-x-4">
-              <Link to="/collections" className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                My Collections
-              </Link>
             </div>
           </div>
-        ) : null}
+        )}
       </div>
     </>
   );

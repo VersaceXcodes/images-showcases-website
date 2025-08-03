@@ -1,83 +1,105 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useAppStore } from '@/store/main';
-import { Collection } from '@schema';
-import { Link } from 'react-router-dom';
-
-const fetchCollections = async (authToken: string): Promise<Collection[]> => {
-  const { data } = await axios.get(
-    `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/collections`,
-    {
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-      },
-    }
-  );
-  return data;
-};
+import { Collection, CreateCollectionInput } from '@schema';
 
 const UV_Collections: React.FC = () => {
-  const authToken = useAppStore(state => state.authentication_state.auth_token);
+  const queryClient = useQueryClient();
+  const currentUser = useAppStore(state => state.authentication_state.current_user);
+  const [newCollectionName, setNewCollectionName] = useState('');
+  const [newCollectionDescription, setNewCollectionDescription] = useState('');
+  const [isPublic, setIsPublic] = useState(true);
 
-  const { data: collections, isLoading, isError, error } = useQuery<Collection[], Error>(
-    ['collections'],
-    () => fetchCollections(authToken!),
-    {
-      enabled: !!authToken,
+  const fetchCollections = async () => {
+    const { data } = await axios.get<Collection[]>(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/collections`, {
+      params: { user_id: currentUser?.user_id }
+    });
+    return data;
+  };
+
+  const { data: collections, isLoading, isError, error } = useQuery<Collection[], Error>(['collections', currentUser?.user_id], fetchCollections);
+
+  const createCollection = async (newCollection: CreateCollectionInput) => {
+    const { data } = await axios.post(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/collections`, newCollection);
+    return data;
+  };
+
+  const createCollectionMutation = useMutation(createCollection, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['collections', currentUser?.user_id]);
     }
-  );
+  });
+
+  const handleCreateCollection = () => {
+    if (!newCollectionName.trim()) return; // Sanitize input
+    createCollectionMutation.mutate({
+      user_id: currentUser?.user_id!,
+      name: newCollectionName,
+      description: newCollectionDescription,
+    });
+    setNewCollectionName('');
+    setNewCollectionDescription('');
+  };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (isError) {
+    return <div>Error: {error.message}</div>;
+  }
 
   return (
     <>
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-            <div className="px-4 py-5 sm:px-6">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
-                User Collections
-              </h3>
-            </div>
-            <div className="border-t border-gray-200">
-              {isLoading ? (
-                <div className="p-5 text-center">
-                  <svg className="animate-spin h-5 w-5 text-blue-600 mx-auto" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M14 10V3.94a7.962 7.962 0 00-4 0V10H8a4 4 0 00-4 4v2h16v-2a4 4 0 00-4-4h-2z"></path>
-                  </svg>
-                  <p>Loading collections...</p>
-                </div>
-              ) : isError ? (
-                <div role="alert" aria-live="polite" className="p-5 text-center bg-red-100 text-red-700">
-                  <p>Error: {error.message}</p>
-                </div>
-              ) : (
-                collections && (
-                  <ul role="list" className="divide-y divide-gray-200">
-                    {collections.map((collection) => (
-                      <li key={collection.collection_id} className="py-4">
-                        <div className="flex items-center space-x-4">
-                          <div className="flex-1 min-w-0">
-                            <span className="block text-sm font-medium text-gray-900 truncate">
-                              {collection.name}
-                            </span>
-                            <span className="block text-sm text-gray-500 truncate">
-                              {collection.description}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-sm text-gray-500">
-                              Created at: {new Date(collection.created_at).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )
-              )}
-            </div>
+      <div className="container mx-auto p-4">
+        <h1 className="text-3xl font-bold mb-4">My Collections</h1>
+        <div className="bg-white p-4 rounded-md shadow-md">
+          <h2 className="text-lg font-semibold mb-2">Create New Collection</h2>
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Collection Name"
+              value={newCollectionName}
+              onChange={(e) => setNewCollectionName(e.target.value)}
+              className="border rounded-md p-2 w-full"
+            />
           </div>
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Description"
+              value={newCollectionDescription}
+              onChange={(e) => setNewCollectionDescription(e.target.value)}
+              className="border rounded-md p-2 w-full"
+            />
+          </div>
+          <div className="mb-4">
+            <label className="inline-flex items-center">
+              <span className="mr-2">Public</span>
+              <input
+                type="checkbox"
+                checked={isPublic}
+                onChange={() => setIsPublic(!isPublic)}
+                className="form-checkbox"
+              />
+            </label>
+          </div>
+          <button
+            onClick={handleCreateCollection}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Create Collection
+          </button>
+        </div>
+        <div className="mt-4">
+          {collections?.map((collection) => (
+            <div key={collection.collection_id} className="bg-gray-100 p-4 rounded-md mb-4 shadow-sm">
+              <h3 className="text-xl font-semibold">{collection.name}</h3>
+              <p>{collection.description}</p>
+            </div>
+          ))}
         </div>
       </div>
     </>

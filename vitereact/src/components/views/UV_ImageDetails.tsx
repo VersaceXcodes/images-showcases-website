@@ -1,114 +1,142 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import axios from 'axios';
-import { Image, createCommentInputSchema, CreateCommentInput, createLikeInputSchema, CreateLikeInput } from '@schema';
 import { useAppStore } from '@/store/main';
-import { z } from 'zod';
+import { Image, Comment, CreateCommentInput } from '@schema';
+
+// Fetch detailed information about a specific image
+const fetchImageDetails = async (image_id: string): Promise<Image> => {
+  const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/images/${image_id}`);
+  return data;
+};
+
+// Fetch related images based on tags and categories
+const fetchRelatedImages = async (query: string, category: string): Promise<Image[]> => {
+  const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/images/search`, {
+    params: { query, category, limit: 5 }
+  });
+  return data;
+};
 
 const UV_ImageDetails: React.FC = () => {
   const { image_id } = useParams<{ image_id: string }>();
-  const queryClient = useQueryClient();
-  const [comment, setComment] = useState('');
+  
   const currentUser = useAppStore(state => state.authentication_state.current_user);
-
-  // Fetch Image Details
-  const { data: imageDetails, isLoading, isError } = useQuery<Image, Error>(
+  const authToken = useAppStore(state => state.authentication_state.auth_token);
+  
+  const imageQuery = useQuery<Image, Error>(
     ['imageDetails', image_id],
-    async () => {
-      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/images/${image_id}`);
-      return response.data;
-    }
+    () => fetchImageDetails(image_id!),
+    { enabled: !!image_id }
   );
 
-  // Mutation for liking an image
-  const likeImageMutation = useMutation<void, Error, CreateLikeInput>({
-    mutationFn: async (likeData) => {
-      await axios.post(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/images/${image_id}/likes`, likeData);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['imageDetails', image_id]);
-    },
-  });
+  const relatedImagesQuery = useQuery<Image[], Error>(
+    ['relatedImages', imageQuery.data?.categories],
+    () => fetchRelatedImages(imageQuery.data!.title, imageQuery.data!.categories || ''),
+    { enabled: !!imageQuery.data?.title }
+  );
 
-  // Mutation for adding a comment
-  const addCommentMutation = useMutation<void, Error, CreateCommentInput>({
+  const createComment = useMutation<Comment, Error, CreateCommentInput>({
     mutationFn: async (newComment) => {
-      await axios.post(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/images/${image_id}/comments`, newComment);
+      const { data } = await axios.post(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/comments`, newComment, {
+        headers: { Authorization: `Bearer ${authToken}` }
+      });
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['imageDetails', image_id]);
-      setComment(''); // Reset comment input
+      // Optionally refresh comments or consider real-time updates with websockets
     },
   });
 
-  const handleLike = () => {
-    if (currentUser) {
-      likeImageMutation.mutate({ image_id, user_id: currentUser.id });
-    }
-  };
-
-  const handleCommentSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (currentUser && comment.trim()) {
-      const parsedComment = createCommentInputSchema.safeParse({ image_id, user_id: currentUser.id, content: comment });
-      if (parsedComment.success) {
-        addCommentMutation.mutate(parsedComment.data);
-      }
-    }
-  };
+  const addLike = useMutation<void, Error>({
+    mutationFn: async () => {
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/likes`, {
+        image_id,
+        user_id: currentUser?.user_id
+      }, {
+        headers: { Authorization: `Bearer ${authToken}` }
+      });
+    },
+  });
 
   return (
     <>
-      {isLoading ? (
-        <p>Loading...</p>
-      ) : isError ? (
-        <p>Error loading image details</p>
-      ) : (
-        <>
-          {imageDetails && (
-            <div className="container mx-auto px-4 py-8">
-              <h2 className="text-2xl font-bold mb-4">{imageDetails.title}</h2>
-              <img src={imageDetails.image_url} alt={imageDetails.title} className="max-w-full h-auto mb-6" />
-              <p className="text-gray-700 mb-4">{imageDetails.description}</p>
-              <button 
-                onClick={handleLike}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none"
+      <div className="min-h-screen bg-white p-4">
+        {imageQuery.isLoading ? (
+          <div>Loading...</div>
+        ) : imageQuery.isError ? (
+          <div aria-live="polite" className="text-red-600">Error loading image details: {imageQuery.error.message}</div>
+        ) : (
+          <>
+            <div className="mb-6">
+              <img
+                src={imageQuery.data?.image_url}
+                alt={imageQuery.data?.title}
+                className="mx-auto max-w-full h-auto"
+              />
+              <div className="mt-2 text-center">
+                <h1 className="text-2xl font-bold">{imageQuery.data?.title}</h1>
+                <p className="text-gray-700">{imageQuery.data?.description}</p>
+                <div className="text-sm text-gray-500">
+                  Uploaded by: <Link to={`/profile/${imageQuery.data?.user_id}`} className="text-blue-500 hover:underline">{imageQuery.data?.user_id}</Link>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-center space-x-4 mb-4">
+              <button
+                onClick={() => addLike.mutate()}
+                className="bg-red-500 hover:bg-red-600 text-white rounded-md px-4 py-2"
                 aria-label="Like Image"
               >
                 Like
               </button>
+            </div>
 
-              <form onSubmit={handleCommentSubmit} className="mt-4">
-                <h3 className="text-lg font-semibold mb-2">Comments</h3>
-                <textarea
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  placeholder="Add a comment..."
-                  className="w-full border rounded mb-2 p-2"
-                  rows={4}
-                />
-                <button
-                  type="submit"
-                  disabled={!comment.trim()}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none"
-                  aria-label="Submit Comment"
-                >
-                  Submit Comment
+            <div className="mb-6">
+              <h2 className="text-xl font-bold mb-4">Comments</h2>
+              {/* Here you can map over available comments */}
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const content = (e.target as HTMLFormElement).comment.value;
+                  if (currentUser) {
+                    createComment.mutate({ image_id: image_id!, user_id: currentUser.user_id, content });
+                  }
+                }}
+              >
+                <textarea name="comment" className="border rounded-md w-full p-2" placeholder="Add a comment" />
+                <button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white rounded-md px-4 py-2 mt-2">
+                  Post Comment
                 </button>
               </form>
-
-              <div className="mt-4">
-                <Link to="/browse" className="text-blue-600 hover:underline">Back to Gallery</Link>
-                <span className="mx-2">|</span>
-                {imageDetails.user_id && (
-                  <Link to={`/profile/${imageDetails.user_id}`} className="text-blue-600 hover:underline">View Uploader's Profile</Link>
-                )}
-              </div>
             </div>
-          )}
-        </>
-      )}
+
+            {relatedImagesQuery.isLoading ? (
+              <div>Loading related images...</div>
+            ) : relatedImagesQuery.isError ? (
+              <div aria-live="polite" className="text-red-600">Error loading related images: {relatedImagesQuery.error.message}</div>
+            ) : (
+              <div className="mb-6">
+                <h2 className="text-xl font-bold mb-4">Related Images</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                  {relatedImagesQuery.data?.map((image) => (
+                    <Link to={`/image/${image.image_id}`} key={image.image_id}>
+                      <img
+                        src={image.image_url}
+                        alt={image.title}
+                        className="object-cover w-full h-32 rounded-md"
+                      />
+                      <div className="text-sm text-gray-600 mt-1 truncate">{image.title}</div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </>
   );
 };
