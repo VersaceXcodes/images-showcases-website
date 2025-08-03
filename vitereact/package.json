@@ -71,10 +71,7 @@
     "vaul": "^0.9.3",
     "zod": "^3.23.8",
     "zustand": "*",
-    "react-icons": "*",
-    "dependencies": "*",
-    "zustand/middleware": "*",
-    "@schema": "*"
+    "react-icons": "*"
   },
   "devDependencies": {
     "@eslint/js": "^9.8.0",
