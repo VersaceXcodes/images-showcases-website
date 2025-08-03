@@ -1,0 +1,235 @@
+{
+  "testCases": [
+    {
+      "id": "functional-app-test",
+      "name": "Functional Application Test",
+      "category": "functionality",
+      "priority": "critical",
+      "description": "Verify the application has actual functionality beyond basic placeholder",
+      "steps": [
+        "Navigate to application homepage",
+        "Verify multiple interactive elements exist (navigation menu, buttons, forms, links)",
+        "Check for proper navigation structure with working routes",
+        "Verify application shows real image showcase features, not just placeholder content",
+        "Confirm the app loads without console errors"
+      ],
+      "expectedOutcome": "Application shows functional image showcase platform with navigation, authentication options, and content areas",
+      "failureCondition": "If page only shows basic placeholder content or 'Vite + React' text, this test should FAIL"
+    },
+    {
+      "id": "navigation-functionality-test",
+      "name": "Navigation Functionality Test",
+      "category": "navigation",
+      "priority": "high",
+      "description": "Test that navigation menu and routing work correctly",
+      "steps": [
+        "Check top navigation bar is visible and properly styled",
+        "Verify 'Explore' link navigates to explore page",
+        "Verify 'Featured' link navigates to featured galleries",
+        "Test 'Log In' and 'Sign Up' links navigate to authentication page",
+        "Confirm logo/home link returns to homepage",
+        "Verify responsive navigation on mobile viewport"
+      ],
+      "expectedOutcome": "All navigation links work correctly and pages load without errors"
+    },
+    {
+      "id": "authentication-ui-test",
+      "name": "Authentication UI Test",
+      "category": "authentication",
+      "priority": "high",
+      "description": "Test authentication forms and UI elements",
+      "steps": [
+        "Navigate to /auth page",
+        "Verify login form is present with email and password fields",
+        "Check registration form is accessible",
+        "Test form validation (empty fields, invalid email format)",
+        "Verify proper error messages display for validation failures",
+        "Check loading states during form submission"
+      ],
+      "expectedOutcome": "Authentication forms are functional with proper validation and user feedback"
+    },
+    {
+      "id": "homepage-content-test",
+      "name": "Homepage Content Test",
+      "category": "content",
+      "priority": "high",
+      "description": "Verify homepage displays meaningful content and showcases",
+      "steps": [
+        "Load homepage and check for main heading 'Explore Showcases'",
+        "Verify descriptive text about the platform is present",
+        "Check for showcase grid layout",
+        "Look for image thumbnails and showcase titles",
+        "Verify 'View Gallery' links are present on showcase cards",
+        "Check loading spinner appears while fetching data"
+      ],
+      "expectedOutcome": "Homepage displays professional image showcase platform with grid of showcases"
+    },
+    {
+      "id": "responsive-design-test",
+      "name": "Responsive Design Test",
+      "category": "ui",
+      "priority": "medium",
+      "description": "Test responsive design across different screen sizes",
+      "steps": [
+        "Test desktop view (1920x1080)",
+        "Test tablet view (768x1024)",
+        "Test mobile view (375x667)",
+        "Verify navigation adapts to screen size",
+        "Check showcase grid adjusts columns appropriately",
+        "Ensure text remains readable at all sizes"
+      ],
+      "expectedOutcome": "Application displays correctly across all device sizes with proper responsive behavior"
+    },
+    {
+      "id": "image-showcase-display-test",
+      "name": "Image Showcase Display Test",
+      "category": "functionality",
+      "priority": "high",
+      "description": "Test image showcase display and interaction",
+      "steps": [
+        "Navigate to explore page",
+        "Verify showcase cards display with images",
+        "Check showcase titles and descriptions are visible",
+        "Test clicking on showcase cards",
+        "Verify image loading and display quality",
+        "Check for proper fallback if images fail to load"
+      ],
+      "expectedOutcome": "Image showcases display correctly with proper metadata and interaction"
+    },
+    {
+      "id": "protected-routes-test",
+      "name": "Protected Routes Test",
+      "category": "security",
+      "priority": "high",
+      "description": "Test that protected routes redirect unauthenticated users",
+      "steps": [
+        "Navigate to /upload without authentication",
+        "Verify redirect to login page occurs",
+        "Navigate to /dashboard without authentication",
+        "Verify redirect to login page occurs",
+        "Navigate to /notifications without authentication",
+        "Verify redirect to login page occurs"
+      ],
+      "expectedOutcome": "Unauthenticated users are redirected to login page when accessing protected routes"
+    },
+    {
+      "id": "loading-states-test",
+      "name": "Loading States Test",
+      "category": "ux",
+      "priority": "medium",
+      "description": "Test loading indicators and states throughout the application",
+      "steps": [
+        "Check initial app loading spinner",
+        "Verify showcase loading spinner on homepage",
+        "Test authentication loading states",
+        "Check loading indicators during navigation",
+        "Verify proper loading states for API calls"
+      ],
+      "expectedOutcome": "Loading indicators appear appropriately and provide good user experience"
+    },
+    {
+      "id": "error-handling-test",
+      "name": "Error Handling Test",
+      "category": "reliability",
+      "priority": "medium",
+      "description": "Test error handling and user feedback",
+      "steps": [
+        "Test network error scenarios",
+        "Verify error messages display for failed API calls",
+        "Check 404 page handling for invalid routes",
+        "Test form validation error messages",
+        "Verify graceful degradation when features fail"
+      ],
+      "expectedOutcome": "Application handles errors gracefully with appropriate user feedback"
+    },
+    {
+      "id": "footer-content-test",
+      "name": "Footer Content Test",
+      "category": "content",
+      "priority": "low",
+      "description": "Test footer presence and content",
+      "steps": [
+        "Scroll to bottom of any page",
+        "Verify footer is present and visible",
+        "Check footer contains appropriate links or information",
+        "Verify footer styling is consistent with design"
+      ],
+      "expectedOutcome": "Footer is present and contains appropriate content"
+    },
+    {
+      "id": "search-functionality-test",
+      "name": "Search Functionality Test",
+      "category": "functionality",
+      "priority": "medium",
+      "description": "Test search features if available",
+      "steps": [
+        "Look for search input or functionality",
+        "Test search with various keywords",
+        "Verify search results display correctly",
+        "Check search result filtering and sorting",
+        "Test empty search results handling"
+      ],
+      "expectedOutcome": "Search functionality works correctly and returns relevant results"
+    },
+    {
+      "id": "performance-test",
+      "name": "Performance Test",
+      "category": "performance",
+      "priority": "medium",
+      "description": "Test application performance and load times",
+      "steps": [
+        "Measure initial page load time",
+        "Check for unnecessary network requests",
+        "Verify images load efficiently",
+        "Test navigation speed between pages",
+        "Check for memory leaks during extended use"
+      ],
+      "expectedOutcome": "Application loads quickly and performs well during normal usage"
+    },
+    {
+      "id": "accessibility-test",
+      "name": "Accessibility Test",
+      "category": "accessibility",
+      "priority": "medium",
+      "description": "Test basic accessibility features",
+      "steps": [
+        "Check for proper heading hierarchy (h1, h2, h3)",
+        "Verify images have alt text",
+        "Test keyboard navigation",
+        "Check color contrast ratios",
+        "Verify screen reader compatibility"
+      ],
+      "expectedOutcome": "Application meets basic accessibility standards"
+    },
+    {
+      "id": "social-features-ui-test",
+      "name": "Social Features UI Test",
+      "category": "functionality",
+      "priority": "medium",
+      "description": "Test social interaction UI elements",
+      "steps": [
+        "Look for like buttons on images/showcases",
+        "Check for comment sections or forms",
+        "Verify follow/unfollow buttons on profiles",
+        "Test notification indicators",
+        "Check social interaction feedback"
+      ],
+      "expectedOutcome": "Social features are visible and provide appropriate user interaction"
+    },
+    {
+      "id": "upload-ui-test",
+      "name": "Upload UI Test",
+      "category": "functionality",
+      "priority": "medium",
+      "description": "Test image upload interface (if accessible)",
+      "steps": [
+        "Navigate to upload page (if authenticated)",
+        "Verify file upload interface is present",
+        "Check for image preview functionality",
+        "Test form fields for title, description, tags",
+        "Verify upload progress indicators"
+      ],
+      "expectedOutcome": "Upload interface is functional and user-friendly"
+    }
+  ]
+}
