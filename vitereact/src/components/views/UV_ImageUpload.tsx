@@ -9,14 +9,12 @@ interface ImageMetadata {
   title: string;
   description: string;
   tags: string[];
-  category_id: string;
 }
 
 const ImageUploadSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
   tags: z.array(z.string()).optional(),
-  category_id: z.string(),
 });
 
 const UV_ImageUpload: React.FC = () => {
@@ -25,7 +23,6 @@ const UV_ImageUpload: React.FC = () => {
     title: '',
     description: '',
     tags: [],
-    category_id: '',
   });
   const authToken = useAppStore(state => state.authentication_state.auth_token);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +39,7 @@ const UV_ImageUpload: React.FC = () => {
     onSuccess: () => {
       setUploadSuccess(true);
       setSelectedFiles([]);
-      setImageMetadata({ title: '', description: '', tags: [], category_id: '' });
+      setImageMetadata({ title: '', description: '', tags: [] });
     },
     onError: (uploadError: any) => {
       setError(uploadError.response ? uploadError.response.data.message : uploadError.message);
@@ -78,16 +75,16 @@ const UV_ImageUpload: React.FC = () => {
     }
     
     if (selectedFiles.length === 0) {
-      setError('Please select at least one image file.');
+      setError('Please select an image file.');
       return;
     }
 
     const formData = new FormData();
-    selectedFiles.forEach(file => formData.append('files', file));
+    formData.append('image', selectedFiles[0]); // Backend expects single file as 'image'
     formData.append('title', imageMetadata.title);
     formData.append('description', imageMetadata.description || '');
-    formData.append('tags', JSON.stringify(imageMetadata.tags));
-    formData.append('category_id', imageMetadata.category_id);
+    formData.append('categories', imageMetadata.tags.join(','));
+    formData.append('user_id', useAppStore.getState().authentication_state.current_user?.user_id || '');
 
     setError(null);
     setUploadSuccess(false);
@@ -106,10 +103,9 @@ const UV_ImageUpload: React.FC = () => {
             <div aria-live="polite" className="bg-green-100 text-green-700 p-2 rounded mb-2">Images uploaded successfully!</div>
           )}
           <div className="mb-4">
-            <label className="block text-gray-700">Select Images</label>
+            <label className="block text-gray-700">Select Image</label>
             <input 
               type="file" 
-              multiple 
               accept="image/png, image/jpeg"
               onChange={handleFileChange} 
               className="mt-1 block w-full" />
@@ -141,16 +137,7 @@ const UV_ImageUpload: React.FC = () => {
               onChange={handleTagsChange}
               className="mt-1 block w-full" />
           </div>
-          <div className="mb-4">
-            <label className="block text-gray-700">Category ID</label>
-            <input 
-              type="text"
-              name="category_id"
-              value={imageMetadata.category_id}
-              onChange={handleMetadataChange}
-              className="mt-1 block w-full" 
-              required />
-          </div>
+
           <button 
             type="submit"
             className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 focus:outline-none"

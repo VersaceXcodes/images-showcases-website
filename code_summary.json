@@ -1,0 +1,105 @@
+{
+  "tech_stack": [
+    "React",
+    "TypeScript", 
+    "Vite",
+    "Express.js",
+    "Node.js",
+    "PostgreSQL",
+    "Zustand",
+    "TanStack Query",
+    "Tailwind CSS",
+    "Radix UI",
+    "Socket.io",
+    "JWT Authentication",
+    "Multer",
+    "Zod"
+  ],
+  "features": [
+    {
+      "name": "User Authentication",
+      "description": "Complete login/logout system with JWT tokens and persistent sessions",
+      "files": [
+        "src/components/views/UV_LogInSignUp.tsx",
+        "src/store/main.tsx",
+        "backend/server.ts"
+      ]
+    },
+    {
+      "name": "Image Gallery & Showcase",
+      "description": "Browse and view image showcases with search and filtering capabilities",
+      "files": [
+        "src/components/views/UV_Homepage.tsx",
+        "src/components/views/UV_Explore.tsx",
+        "src/components/views/UV_SingleImageView.tsx"
+      ]
+    },
+    {
+      "name": "Image Upload",
+      "description": "Upload images with metadata including title, description, and tags",
+      "files": [
+        "src/components/views/UV_ImageUpload.tsx"
+      ]
+    },
+    {
+      "name": "User Profiles",
+      "description": "User profile management and viewing other users' profiles",
+      "files": [
+        "src/components/views/UV_UserProfile.tsx",
+        "src/components/views/UV_UserDashboard.tsx"
+      ]
+    },
+    {
+      "name": "Social Features",
+      "description": "Follow users, like images, and comment on showcases",
+      "files": [
+        "backend/server.ts"
+      ]
+    },
+    {
+      "name": "Real-time Notifications",
+      "description": "WebSocket-based notifications for likes, comments, and follows",
+      "files": [
+        "src/components/views/UV_Notifications.tsx",
+        "src/store/main.tsx",
+        "backend/server.ts"
+      ]
+    },
+    {
+      "name": "Featured Galleries",
+      "description": "Curated featured image galleries and collections",
+      "files": [
+        "src/components/views/UV_FeaturedGalleries.tsx"
+      ]
+    },
+    {
+      "name": "Navigation & Layout",
+      "description": "Responsive navigation with authentication-aware menu items",
+      "files": [
+        "src/components/views/GV_TopNav.tsx",
+        "src/components/views/GV_Footer.tsx",
+        "src/App.tsx"
+      ]
+    }
+  ],
+  "database_tables": [
+    "users",
+    "images", 
+    "image_tags",
+    "comments",
+    "likes",
+    "follows",
+    "collections",
+    "notifications"
+  ],
+  "api_endpoints": [
+    "/auth/register",
+    "/auth/login", 
+    "/images",
+    "/images/search",
+    "/comments",
+    "/likes",
+    "/follows",
+    "/notifications"
+  ]
+}

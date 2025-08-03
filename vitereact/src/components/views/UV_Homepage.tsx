@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { useAppStore } from '@/store/main';
-import { Showcase } from '@/types';
+import { Showcase } from '@/types/index';
 import { Link } from 'react-router-dom';
 
 const fetchShowcases = async (category?: string): Promise<Showcase[]> => {
