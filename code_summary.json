@@ -4,40 +4,48 @@
     "TypeScript", 
     "Vite",
     "Express.js",
-    "Node.js",
     "PostgreSQL",
-    "Socket.IO",
+    "Node.js",
+    "Tailwind CSS",
     "Zustand",
     "React Query",
-    "React Router",
-    "Tailwind CSS",
-    "Radix UI",
+    "Socket.io",
+    "JWT Authentication",
     "Axios",
-    "JWT",
+    "React Router",
+    "Radix UI",
     "Zod"
   ],
   "features": [
     {
       "name": "User Authentication",
-      "description": "Complete user registration, login, logout, and session management with JWT tokens",
+      "description": "Complete login/logout system with JWT tokens, registration, and session management",
       "files": [
-        "vitereact/src/store/main.tsx",
         "vitereact/src/components/views/UV_LogInSignUp.tsx",
+        "vitereact/src/store/main.tsx",
         "backend/server.ts"
       ]
     },
     {
-      "name": "Image Showcase Platform",
-      "description": "Main application for browsing, uploading, and managing image showcases",
+      "name": "Image Gallery & Showcase",
+      "description": "Browse and view image galleries with search functionality and categorization",
       "files": [
         "vitereact/src/components/views/UV_Homepage.tsx",
         "vitereact/src/components/views/UV_Explore.tsx",
-        "vitereact/src/components/views/UV_ImageUpload.tsx"
+        "vitereact/src/components/views/UV_SingleImageView.tsx"
       ]
     },
     {
-      "name": "User Profile Management",
-      "description": "User profiles with personal information, portfolio links, and social features",
+      "name": "Image Upload",
+      "description": "Protected route for authenticated users to upload images with metadata",
+      "files": [
+        "vitereact/src/components/views/UV_ImageUpload.tsx",
+        "backend/server.ts"
+      ]
+    },
+    {
+      "name": "User Profiles",
+      "description": "User profile pages displaying user information and their uploaded content",
       "files": [
         "vitereact/src/components/views/UV_UserProfile.tsx",
         "vitereact/src/components/views/UV_UserDashboard.tsx"
@@ -45,42 +53,41 @@
     },
     {
       "name": "Social Features",
-      "description": "Follow users, like images, comment on showcases, and receive notifications",
+      "description": "Comments, likes, and follow functionality for user interaction",
+      "files": [
+        "backend/server.ts"
+      ]
+    },
+    {
+      "name": "Real-time Notifications",
+      "description": "WebSocket-based notification system for user interactions",
       "files": [
         "vitereact/src/components/views/UV_Notifications.tsx",
+        "vitereact/src/store/main.tsx",
         "backend/server.ts"
       ]
     },
     {
       "name": "Navigation System",
-      "description": "Responsive navigation with authentication-aware menu items",
+      "description": "Responsive navigation with authentication-aware menu and user dropdown",
       "files": [
         "vitereact/src/components/views/GV_TopNav.tsx",
         "vitereact/src/components/views/GV_Footer.tsx"
       ]
     },
     {
-      "name": "Real-time Features",
-      "description": "WebSocket-based real-time notifications and updates",
-      "files": [
-        "vitereact/src/store/main.tsx",
-        "backend/server.ts"
-      ]
-    },
-    {
-      "name": "Image Management",
-      "description": "Upload, categorize, search, and display images with metadata",
-      "files": [
-        "vitereact/src/components/views/UV_ImageUpload.tsx",
-        "vitereact/src/components/views/UV_SingleImageView.tsx",
-        "backend/server.ts"
-      ]
-    },
-    {
       "name": "Featured Galleries",
-      "description": "Curated collections and featured image galleries",
+      "description": "Curated gallery showcases and featured content display",
       "files": [
         "vitereact/src/components/views/UV_FeaturedGalleries.tsx"
+      ]
+    },
+    {
+      "name": "Search & Discovery",
+      "description": "Image search functionality with filtering and sorting capabilities",
+      "files": [
+        "vitereact/src/components/views/UV_SearchResults.tsx",
+        "backend/server.ts"
       ]
     }
   ],
@@ -95,45 +102,46 @@
     "notifications"
   ],
   "api_endpoints": [
-    "/auth/register",
-    "/auth/login", 
-    "/images",
-    "/images/search",
-    "/comments",
-    "/likes",
-    "/follows",
-    "/notifications"
+    "POST /auth/register",
+    "POST /auth/login", 
+    "POST /images",
+    "GET /images/search",
+    "POST /comments",
+    "POST /likes", 
+    "POST /follows",
+    "GET /notifications"
   ],
   "key_components": [
     {
       "name": "App.tsx",
-      "description": "Main application component with routing and authentication logic",
-      "path": "vitereact/src/App.tsx"
+      "description": "Main application component with routing and authentication logic"
     },
     {
-      "name": "Zustand Store",
-      "description": "Global state management for authentication, user data, and real-time features",
-      "path": "vitereact/src/store/main.tsx"
+      "name": "store/main.tsx", 
+      "description": "Zustand store managing authentication state and user data"
     },
     {
-      "name": "Protected Routes",
-      "description": "Authentication wrapper for protected application areas",
-      "path": "vitereact/src/App.tsx"
+      "name": "UV_Homepage.tsx",
+      "description": "Landing page displaying image showcases with search integration"
     },
     {
-      "name": "Express Server",
-      "description": "Backend API server with authentication, file uploads, and WebSocket support",
-      "path": "backend/server.ts"
+      "name": "UV_LogInSignUp.tsx",
+      "description": "Authentication forms for login and registration"
+    },
+    {
+      "name": "GV_TopNav.tsx",
+      "description": "Main navigation component with user dropdown and auth-aware menu"
     }
   ],
   "architecture_notes": [
-    "Frontend uses React with TypeScript and Vite for fast development",
-    "State management handled by Zustand with persistence",
-    "API calls managed through React Query for caching and error handling", 
-    "Authentication uses JWT tokens with protected route system",
-    "Real-time features implemented with Socket.IO",
-    "Database schema supports social features like follows, likes, and comments",
-    "File uploads handled with Multer middleware",
-    "UI components built with Radix UI and styled with Tailwind CSS"
+    "Single Page Application (SPA) with client-side routing",
+    "RESTful API with WebSocket support for real-time features",
+    "JWT-based authentication with persistent storage",
+    "Component-based architecture with TypeScript for type safety",
+    "Responsive design using Tailwind CSS",
+    "State management with Zustand for simplicity",
+    "React Query for server state management and caching",
+    "Protected routes requiring authentication",
+    "File upload handling with multer on backend"
   ]
 }

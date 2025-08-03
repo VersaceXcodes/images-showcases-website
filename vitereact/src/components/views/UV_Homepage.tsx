@@ -2,14 +2,26 @@ import React, { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { useAppStore } from '@/store/main';
-import { Showcase } from '@/types'; // Assume `types` contains the Showcase type
+import { Showcase } from '@/types';
 import { Link } from 'react-router-dom';
 
 const fetchShowcases = async (category?: string): Promise<Showcase[]> => {
-  const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/showcases`, {
-    params: { category, limit: 20, offset: 0 },
+  const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/images/search`, {
+    params: { query: category || '', limit: 20, offset: 0, sort_by: 'uploaded_at', sort_order: 'DESC' },
   });
-  return data;
+  
+  // Transform images to showcase format for display
+  const showcases: Showcase[] = data.map((image: any) => ({
+    showcase_id: image.image_id,
+    user_id: image.user_id,
+    title: image.title,
+    description: image.description,
+    tags: image.categories ? image.categories.split(',') : [],
+    images: [{ image_id: image.image_id, image_url: image.image_url, title: image.title, description: image.description }],
+    created_at: new Date(image.uploaded_at)
+  }));
+  
+  return showcases;
 };
 
 const UV_Homepage: React.FC = () => {
@@ -53,15 +65,15 @@ const UV_Homepage: React.FC = () => {
               <div key={showcase.showcase_id} className="bg-white shadow rounded overflow-hidden">
                  {showcase.images.length > 0 && (
                    <img src={showcase.images[0].image_url} alt={showcase.title} className="w-full h-48 object-cover" />
-                 )}                <div className="p-4">
+                 )}
+                <div className="p-4">
                   <h3 className="font-semibold text-lg">{showcase.title}</h3>
                   <p className="mt-1 text-gray-600">{showcase.description}</p>
-                  <div className="mt-2">
-                    <Link to={`/showcase/${showcase.showcase_id}`} className="text-blue-500 hover:underline">
-                      View Gallery
-                    </Link>
-                  </div>
-                </div>
+                   <div className="mt-2">
+                     <Link to={`/image/${showcase.showcase_id}`} className="text-blue-500 hover:underline">
+                       View Image
+                     </Link>
+                   </div>                </div>
               </div>
             ))}
           </div>

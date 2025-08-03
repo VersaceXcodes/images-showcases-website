@@ -66,7 +66,7 @@ const App: React.FC = () => {
       <QueryClientProvider client={queryClient}>
         <div className="App min-h-screen flex flex-col">
           <GV_TopNav />
-          <main className="flex-1">
+          <main className="flex-1 pt-16">
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<UV_Homepage />} />
