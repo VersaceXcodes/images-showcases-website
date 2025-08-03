@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import pkg from 'pg';
+const { Pool } = pkg;
 import path from 'path';
 import { fileURLToPath } from 'url';
 import jwt from 'jsonwebtoken';
@@ -27,7 +28,8 @@ import {
   searchCommentInputSchema,
   likeSchema,
   createLikeInputSchema,
-  followSchema
+  followSchema,
+  createFollowInputSchema
 } from './schema.ts';
 
 dotenv.config();
@@ -38,7 +40,7 @@ const pool = new Pool(
   DATABASE_URL
     ? { 
         connectionString: DATABASE_URL, 
-        ssl: { require: true } 
+        ssl: { rejectUnauthorized: false } 
       }
     : {
         host: PGHOST,
@@ -46,7 +48,7 @@ const pool = new Pool(
         user: PGUSER,
         password: PGPASSWORD,
         port: Number(PGPORT),
-        ssl: { require: true },
+        ssl: { rejectUnauthorized: false },
       }
 );
 
@@ -66,7 +68,7 @@ const io = new Server(httpServer, {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const port = process.env.PORT || 3000;
+const port = Number(process.env.PORT) || 3000;
 app.use(cors());
 app.use(express.json({ limit: "5mb" }));
 
