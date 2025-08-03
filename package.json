@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently \"cd vitereact-boilerplate && npm i --legacy-peer-deps && npm run dev\" \"cd backend-boilerplate && npm i && npm run start\""
+    "dev": "concurrently \"cd vitereact && npm i --legacy-peer-deps && npm run dev\" \"cd backend && npm i && PORT=3001 npm run start\""
   },
   "author": "",
   "license": "ISC",
