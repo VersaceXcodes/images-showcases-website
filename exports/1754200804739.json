@@ -1,0 +1,15 @@
+{
+  "timestamp": 1754200804739,
+  "operation": {
+    "id": "db:postgres"
+  },
+  "projectId": "images-showcases-website",
+  "files": [
+    {
+      "path": "../../apps/images-showcases-website/backend/db.sql",
+      "type": "text",
+      "size": 398,
+      "dependencies": false
+    }
+  ]
+}

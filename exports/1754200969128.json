@@ -1,0 +1,15 @@
+{
+  "timestamp": 1754200969128,
+  "operation": {
+    "id": "backend:specifications:openapi"
+  },
+  "projectId": "images-showcases-website",
+  "files": [
+    {
+      "path": "../../apps/images-showcases-website/backend/openapi.yaml",
+      "type": "text",
+      "size": 17239,
+      "dependencies": false
+    }
+  ]
+}

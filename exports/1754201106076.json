@@ -1,0 +1,19 @@
+{
+  "timestamp": 1754201106076,
+  "operation": {
+    "id": "webapp:react:views",
+    "refs": {
+      "id": "UV_Login",
+      "version": "1754201073454"
+    }
+  },
+  "projectId": "images-showcases-website",
+  "files": [
+    {
+      "path": "../../apps/images-showcases-website/vitereact/src/components/views/UV_Login.tsx",
+      "type": "text",
+      "size": 5000,
+      "dependencies": false
+    }
+  ]
+}

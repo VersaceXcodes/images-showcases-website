@@ -1,0 +1,727 @@
+openapi: 3.0.0
+info:
+  title: Image Gallery Showcase API
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+paths:
+  /auth/register:
+    post:
+      summary: User registration
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserInput"
+      responses:
+        "201":
+          description: Created a new user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /auth/login:
+    post:
+      summary: User login
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  format: password
+                  example: pass1234
+      responses:
+        "200":
+          description: Logged in successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /users/{user_id}:
+    get:
+      summary: Get user profile
+      operationId: getUserProfile
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User profile retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    put:
+      summary: Update user profile
+      operationId: updateUserProfile
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserInput"
+      responses:
+        "200":
+          description: User profile updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /users/search:
+    get:
+      summary: Search users
+      operationId: searchUsers
+      parameters:
+        - name: query
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+            enum:
+              - username
+              - created_at
+        - name: sort_order
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+      responses:
+        "200":
+          description: List of found users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+  /images:
+    post:
+      summary: Upload a new image
+      operationId: uploadImage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateImageInput"
+      responses:
+        "201":
+          description: Image uploaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Image"
+  /images/{image_id}:
+    get:
+      summary: Get image details
+      operationId: getImageDetails
+      parameters:
+        - name: image_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Image details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Image"
+    put:
+      summary: Update image details
+      operationId: updateImage
+      parameters:
+        - name: image_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateImageInput"
+      responses:
+        "200":
+          description: Image details updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Image"
+    delete:
+      summary: Delete an image
+      operationId: deleteImage
+      parameters:
+        - name: image_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Image deleted successfully
+  /images/search:
+    get:
+      summary: Search images
+      operationId: searchImages
+      parameters:
+        - name: query
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+            enum:
+              - title
+              - uploaded_at
+        - name: sort_order
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+      responses:
+        "200":
+          description: List of found images
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Image"
+  /comments:
+    post:
+      summary: Add a comment
+      operationId: addComment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCommentInput"
+      responses:
+        "201":
+          description: Comment added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+  /comments/{comment_id}:
+    put:
+      summary: Update a comment
+      operationId: updateComment
+      parameters:
+        - name: comment_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCommentInput"
+      responses:
+        "200":
+          description: Comment updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+    delete:
+      summary: Delete a comment
+      operationId: deleteComment
+      parameters:
+        - name: comment_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Comment deleted successfully
+  /likes:
+    post:
+      summary: Add a like
+      operationId: addLike
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLikeInput"
+      responses:
+        "201":
+          description: Like added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Like"
+  /likes/{like_id}:
+    delete:
+      summary: Remove a like
+      operationId: removeLike
+      parameters:
+        - name: like_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Like removed successfully
+  /follows:
+    post:
+      summary: Follow a user
+      operationId: followUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFollowInput"
+      responses:
+        "201":
+          description: User followed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Follow"
+  /follows/{follower_id}/{followed_id}:
+    delete:
+      summary: Unfollow a user
+      operationId: unfollowUser
+      parameters:
+        - name: follower_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: followed_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: User unfollowed successfully
+  /collections:
+    post:
+      summary: Create a collection
+      operationId: createCollection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCollectionInput"
+      responses:
+        "201":
+          description: Collection created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Collection"
+  /collections/{collection_id}:
+    put:
+      summary: Update a collection
+      operationId: updateCollection
+      parameters:
+        - name: collection_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCollectionInput"
+      responses:
+        "200":
+          description: Collection updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Collection"
+    delete:
+      summary: Delete a collection
+      operationId: deleteCollection
+      parameters:
+        - name: collection_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Collection deleted successfully
+  /collections/search:
+    get:
+      summary: Search collections
+      operationId: searchCollections
+      parameters:
+        - name: query
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+            enum:
+              - name
+              - created_at
+        - name: sort_order
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+      responses:
+        "200":
+          description: List of found collections
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Collection"
+  /notifications:
+    get:
+      summary: List notifications
+      operationId: listNotifications
+      parameters:
+        - name: user_id
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+            enum:
+              - created_at
+        - name: sort_order
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+      responses:
+        "200":
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+  /notifications/{notification_id}:
+    patch:
+      summary: Mark notification as read
+      operationId: markNotificationAsRead
+      parameters:
+        - name: notification_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateNotificationInput"
+      responses:
+        "200":
+          description: Notification marked as read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        user_id:
+          type: string
+        email:
+          type: string
+        username:
+          type: string
+        password_hash:
+          type: string
+        profile_picture:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        auth_token:
+          type: string
+          nullable: true
+    CreateUserInput:
+      type: object
+      properties:
+        email:
+          type: string
+        username:
+          type: string
+        password_hash:
+          type: string
+        profile_picture:
+          type: string
+          nullable: true
+    UpdateUserInput:
+      type: object
+      properties:
+        user_id:
+          type: string
+        email:
+          type: string
+        username:
+          type: string
+        password_hash:
+          type: string
+        profile_picture:
+          type: string
+          nullable: true
+    Image:
+      type: object
+      properties:
+        image_id:
+          type: string
+        user_id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        image_url:
+          type: string
+        categories:
+          type: string
+          nullable: true
+        uploaded_at:
+          type: string
+          format: date-time
+    CreateImageInput:
+      type: object
+      properties:
+        user_id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        image_url:
+          type: string
+        categories:
+          type: string
+          nullable: true
+    UpdateImageInput:
+      type: object
+      properties:
+        image_id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        image_url:
+          type: string
+        categories:
+          type: string
+          nullable: true
+    Comment:
+      type: object
+      properties:
+        comment_id:
+          type: string
+        image_id:
+          type: string
+        user_id:
+          type: string
+        content:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+    CreateCommentInput:
+      type: object
+      properties:
+        image_id:
+          type: string
+        user_id:
+          type: string
+        content:
+          type: string
+    UpdateCommentInput:
+      type: object
+      properties:
+        comment_id:
+          type: string
+        content:
+          type: string
+    Like:
+      type: object
+      properties:
+        like_id:
+          type: string
+        image_id:
+          type: string
+        user_id:
+          type: string
+    CreateLikeInput:
+      type: object
+      properties:
+        image_id:
+          type: string
+        user_id:
+          type: string
+    Follow:
+      type: object
+      properties:
+        follower_id:
+          type: string
+        followed_id:
+          type: string
+    CreateFollowInput:
+      type: object
+      properties:
+        follower_id:
+          type: string
+        followed_id:
+          type: string
+    Collection:
+      type: object
+      properties:
+        collection_id:
+          type: string
+        user_id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    CreateCollectionInput:
+      type: object
+      properties:
+        user_id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+    UpdateCollectionInput:
+      type: object
+      properties:
+        collection_id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+    Notification:
+      type: object
+      properties:
+        notification_id:
+          type: string
+        user_id:
+          type: string
+        type:
+          type: string
+        entity_id:
+          type: string
+          nullable: true
+        message:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        is_read:
+          type: boolean
+    UpdateNotificationInput:
+      type: object
+      properties:
+        notification_id:
+          type: string
+        is_read:
+          type: boolean

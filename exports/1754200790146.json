@@ -1,0 +1,15 @@
+{
+  "timestamp": 1754200790146,
+  "operation": {
+    "id": "backend:specifications:asyncapi"
+  },
+  "projectId": "images-showcases-website",
+  "files": [
+    {
+      "path": "../../apps/images-showcases-website/backend/asyncapi.yaml",
+      "type": "text",
+      "size": 2751,
+      "dependencies": false
+    }
+  ]
+}

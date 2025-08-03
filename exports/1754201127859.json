@@ -1,0 +1,21 @@
+{
+  "timestamp": 1754201127859,
+  "operation": {
+    "id": "backend:tests:main"
+  },
+  "projectId": "images-showcases-website",
+  "files": [
+    {
+      "path": "../../apps/images-showcases-website/backend/server.test.js",
+      "type": "text",
+      "size": 7598,
+      "dependencies": false
+    },
+    {
+      "path": "../../apps/images-showcases-website/backend/jest.config.js",
+      "type": "text",
+      "size": 49,
+      "dependencies": false
+    }
+  ]
+}

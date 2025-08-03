@@ -1,0 +1,15 @@
+{
+  "timestamp": 1754200990017,
+  "operation": {
+    "id": "backend:server:main"
+  },
+  "projectId": "images-showcases-website",
+  "files": [
+    {
+      "path": "../../apps/images-showcases-website/backend/server.ts",
+      "type": "text",
+      "size": 10026,
+      "dependencies": false
+    }
+  ]
+}

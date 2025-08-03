@@ -1,0 +1,15 @@
+{
+  "timestamp": 1754201094088,
+  "operation": {
+    "id": "settings:config:package"
+  },
+  "projectId": "images-showcases-website",
+  "files": [
+    {
+      "path": "../../apps/images-showcases-website/vitereact/package.json",
+      "type": "text",
+      "size": 2998,
+      "dependencies": true
+    }
+  ]
+}

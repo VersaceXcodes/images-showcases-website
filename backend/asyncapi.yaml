@@ -1,0 +1,324 @@
+asyncapi: 2.0.0
+id: urn:uuid:example-image-gallery-showcase
+info:
+  title: Image Gallery Showcase Realtime API
+  version: 1.0.0
+  description: Realtime API for events and updates in the Image Gallery Showcase
+    application.
+servers:
+  development:
+    url: http://localhost:3000
+    protocol: ws
+channels:
+  user/created:
+    subscribe:
+      summary: Notify frontend when a new user is created.
+      message:
+        $ref: "#/components/messages/UserCreated"
+  user/updated:
+    subscribe:
+      summary: Notify frontend when a user profile is updated.
+      message:
+        $ref: "#/components/messages/UserUpdated"
+  image/uploaded:
+    subscribe:
+      summary: Notify frontend when a new image is uploaded.
+      message:
+        $ref: "#/components/messages/ImageUploaded"
+  image/updated:
+    subscribe:
+      summary: Notify frontend when an image is updated.
+      message:
+        $ref: "#/components/messages/ImageUpdated"
+  image/deleted:
+    subscribe:
+      summary: Notify frontend when an image is deleted.
+      message:
+        $ref: "#/components/messages/ImageDeleted"
+  comment/added:
+    subscribe:
+      summary: Notify frontend when a new comment is added to an image.
+      message:
+        $ref: "#/components/messages/CommentAdded"
+  comment/updated:
+    subscribe:
+      summary: Notify frontend when a comment is updated.
+      message:
+        $ref: "#/components/messages/CommentUpdated"
+  comment/deleted:
+    subscribe:
+      summary: Notify frontend when a comment is deleted.
+      message:
+        $ref: "#/components/messages/CommentDeleted"
+  like/added:
+    subscribe:
+      summary: Notify frontend when a new like is added to an image.
+      message:
+        $ref: "#/components/messages/LikeAdded"
+  like/removed:
+    subscribe:
+      summary: Notify frontend when a like is removed from an image.
+      message:
+        $ref: "#/components/messages/LikeRemoved"
+  follow/created:
+    subscribe:
+      summary: Notify frontend when a new follow relationship is created.
+      message:
+        $ref: "#/components/messages/FollowCreated"
+  follow/removed:
+    subscribe:
+      summary: Notify frontend when a follow relationship is removed.
+      message:
+        $ref: "#/components/messages/FollowRemoved"
+  notification/created:
+    subscribe:
+      summary: Notify frontend of a new notification.
+      message:
+        $ref: "#/components/messages/NotificationCreated"
+  notification/updated:
+    subscribe:
+      summary: Notify frontend when a notification is updated.
+      message:
+        $ref: "#/components/messages/NotificationUpdated"
+components:
+  messages:
+    UserCreated:
+      payload:
+        type: object
+        properties:
+          user:
+            $ref: "#/components/schemas/userSchema"
+        required:
+          - user
+    UserUpdated:
+      payload:
+        type: object
+        properties:
+          user:
+            $ref: "#/components/schemas/updateUserInputSchema"
+        required:
+          - user
+    ImageUploaded:
+      payload:
+        type: object
+        properties:
+          image:
+            $ref: "#/components/schemas/imageSchema"
+        required:
+          - image
+    ImageUpdated:
+      payload:
+        type: object
+        properties:
+          image:
+            $ref: "#/components/schemas/updateImageInputSchema"
+        required:
+          - image
+    ImageDeleted:
+      payload:
+        type: object
+        properties:
+          image_id:
+            type: string
+        required:
+          - image_id
+    CommentAdded:
+      payload:
+        type: object
+        properties:
+          comment:
+            $ref: "#/components/schemas/commentSchema"
+        required:
+          - comment
+    CommentUpdated:
+      payload:
+        type: object
+        properties:
+          comment:
+            $ref: "#/components/schemas/updateCommentInputSchema"
+        required:
+          - comment
+    CommentDeleted:
+      payload:
+        type: object
+        properties:
+          comment_id:
+            type: string
+        required:
+          - comment_id
+    LikeAdded:
+      payload:
+        type: object
+        properties:
+          like:
+            $ref: "#/components/schemas/likeSchema"
+        required:
+          - like
+    LikeRemoved:
+      payload:
+        type: object
+        properties:
+          like_id:
+            type: string
+        required:
+          - like_id
+    FollowCreated:
+      payload:
+        type: object
+        properties:
+          follow:
+            $ref: "#/components/schemas/followSchema"
+        required:
+          - follow
+    FollowRemoved:
+      payload:
+        type: object
+        properties:
+          follower_id:
+            type: string
+          followed_id:
+            type: string
+        required:
+          - follower_id
+          - followed_id
+    NotificationCreated:
+      payload:
+        type: object
+        properties:
+          notification:
+            $ref: "#/components/schemas/notificationSchema"
+        required:
+          - notification
+    NotificationUpdated:
+      payload:
+        type: object
+        properties:
+          notification:
+            $ref: "#/components/schemas/updateNotificationInputSchema"
+        required:
+          - notification
+  schemas:
+    userSchema:
+      type: object
+      properties:
+        user_id:
+          type: string
+        email:
+          type: string
+        username:
+          type: string
+        password_hash:
+          type: string
+        profile_picture:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        auth_token:
+          type: string
+    updateUserInputSchema:
+      type: object
+      properties:
+        user_id:
+          type: string
+        email:
+          type: string
+        username:
+          type: string
+        password_hash:
+          type: string
+        profile_picture:
+          type: string
+    imageSchema:
+      type: object
+      properties:
+        image_id:
+          type: string
+        user_id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        image_url:
+          type: string
+        categories:
+          type: string
+        uploaded_at:
+          type: string
+          format: date-time
+    updateImageInputSchema:
+      type: object
+      properties:
+        image_id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        image_url:
+          type: string
+        categories:
+          type: string
+    commentSchema:
+      type: object
+      properties:
+        comment_id:
+          type: string
+        image_id:
+          type: string
+        user_id:
+          type: string
+        content:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+    updateCommentInputSchema:
+      type: object
+      properties:
+        comment_id:
+          type: string
+        content:
+          type: string
+    likeSchema:
+      type: object
+      properties:
+        like_id:
+          type: string
+        image_id:
+          type: string
+        user_id:
+          type: string
+    followSchema:
+      type: object
+      properties:
+        follower_id:
+          type: string
+        followed_id:
+          type: string
+    notificationSchema:
+      type: object
+      properties:
+        notification_id:
+          type: string
+        user_id:
+          type: string
+        type:
+          type: string
+        entity_id:
+          type: string
+        message:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        is_read:
+          type: boolean
+    updateNotificationInputSchema:
+      type: object
+      properties:
+        notification_id:
+          type: string
+        is_read:
+          type: boolean

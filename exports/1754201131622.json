@@ -1,0 +1,19 @@
+{
+  "timestamp": 1754201131622,
+  "operation": {
+    "id": "webapp:react:views",
+    "refs": {
+      "id": "UV_UploadImage",
+      "version": "1754201073461"
+    }
+  },
+  "projectId": "images-showcases-website",
+  "files": [
+    {
+      "path": "../../apps/images-showcases-website/vitereact/src/components/views/UV_UploadImage.tsx",
+      "type": "text",
+      "size": 5746,
+      "dependencies": false
+    }
+  ]
+}

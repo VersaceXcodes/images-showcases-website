@@ -1,0 +1,19 @@
+{
+  "timestamp": 1754201083793,
+  "operation": {
+    "id": "webapp:react:views",
+    "refs": {
+      "id": "GV_Footer",
+      "version": "latest"
+    }
+  },
+  "projectId": "images-showcases-website",
+  "files": [
+    {
+      "path": "../../apps/images-showcases-website/vitereact/src/components/views/GV_Footer.tsx",
+      "type": "text",
+      "size": 1451,
+      "dependencies": false
+    }
+  ]
+}
