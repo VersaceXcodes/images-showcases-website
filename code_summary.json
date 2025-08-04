@@ -3,7 +3,7 @@
     "React",
     "Vite", 
     "TypeScript",
-    "Express",
+    "Express.js",
     "PostgreSQL",
     "Node.js",
     "Zustand",
@@ -11,10 +11,9 @@
     "Tailwind CSS",
     "Radix UI",
     "Socket.io",
-    "Axios",
-    "Zod",
-    "JWT",
-    "Multer"
+    "JWT Authentication",
+    "Multer",
+    "Zod Validation"
   ],
   "features": [
     {
@@ -46,7 +45,7 @@
     },
     {
       "name": "User Profiles",
-      "description": "View user profiles and manage personal dashboard",
+      "description": "View and manage user profiles with personal information and portfolio links",
       "files": [
         "src/components/views/UV_UserProfile.tsx",
         "src/components/views/UV_UserDashboard.tsx"
@@ -54,9 +53,18 @@
     },
     {
       "name": "Social Features",
-      "description": "Like images, comment on posts, follow users, and receive notifications",
+      "description": "Like images, comment on posts, and follow other users",
+      "files": [
+        "backend/server.ts",
+        "src/store/main.tsx"
+      ]
+    },
+    {
+      "name": "Real-time Notifications",
+      "description": "WebSocket-based notifications for likes, comments, and follows",
       "files": [
         "src/components/views/UV_Notifications.tsx",
+        "src/store/main.tsx",
         "backend/server.ts"
       ]
     },
@@ -65,20 +73,13 @@
       "description": "Responsive navigation with authentication-aware menu and footer",
       "files": [
         "src/components/views/GV_TopNav.tsx",
-        "src/components/views/GV_Footer.tsx"
-      ]
-    },
-    {
-      "name": "Real-time Communication",
-      "description": "WebSocket integration for live notifications and updates",
-      "files": [
-        "src/store/main.tsx",
-        "backend/server.ts"
+        "src/components/views/GV_Footer.tsx",
+        "src/App.tsx"
       ]
     },
     {
       "name": "Search & Discovery",
-      "description": "Search images by title, description, and browse by categories",
+      "description": "Search images by title, description, and categories with sorting options",
       "files": [
         "src/components/views/UV_SearchResults.tsx",
         "backend/server.ts"
@@ -105,5 +106,24 @@
     "/api/follows",
     "/api/users/:user_id",
     "/api/notifications"
+  ],
+  "key_libraries": {
+    "state_management": "Zustand with persistence",
+    "data_fetching": "@tanstack/react-query",
+    "routing": "react-router-dom",
+    "styling": "Tailwind CSS with Radix UI components",
+    "forms": "react-hook-form with Zod validation",
+    "real_time": "Socket.io for WebSocket connections",
+    "file_upload": "Multer for handling multipart/form-data"
+  },
+  "architecture_notes": [
+    "Single Page Application (SPA) with client-side routing",
+    "RESTful API with Express.js backend",
+    "JWT-based authentication with token persistence",
+    "Real-time features using WebSocket connections",
+    "File uploads stored locally with URL references in database",
+    "Responsive design with mobile-first approach",
+    "Protected routes requiring authentication",
+    "Error handling and loading states throughout the application"
   ]
 }
