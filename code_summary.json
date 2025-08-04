@@ -3,17 +3,18 @@
     "React",
     "Vite", 
     "TypeScript",
-    "Express.js",
+    "Express",
     "PostgreSQL",
     "Node.js",
-    "Tailwind CSS",
     "Zustand",
     "React Query",
-    "Socket.IO",
-    "JWT Authentication",
-    "Multer",
+    "Tailwind CSS",
+    "Radix UI",
+    "Socket.io",
+    "Axios",
     "Zod",
-    "Radix UI"
+    "JWT",
+    "Multer"
   ],
   "features": [
     {
@@ -27,11 +28,12 @@
     },
     {
       "name": "Image Gallery & Showcase",
-      "description": "Browse and view image showcases with search functionality and categorization",
+      "description": "Browse and view image showcases with search, filtering, and detailed views",
       "files": [
         "src/components/views/UV_Homepage.tsx",
         "src/components/views/UV_Explore.tsx",
-        "src/components/views/UV_SingleImageView.tsx"
+        "src/components/views/UV_SingleImageView.tsx",
+        "src/components/views/UV_FeaturedGalleries.tsx"
       ]
     },
     {
@@ -44,7 +46,7 @@
     },
     {
       "name": "User Profiles",
-      "description": "User profile management and viewing other users' profiles",
+      "description": "View user profiles and manage personal dashboard",
       "files": [
         "src/components/views/UV_UserProfile.tsx",
         "src/components/views/UV_UserDashboard.tsx"
@@ -52,18 +54,9 @@
     },
     {
       "name": "Social Features",
-      "description": "Like images, comment on images, and follow other users",
-      "files": [
-        "backend/server.ts",
-        "src/store/main.tsx"
-      ]
-    },
-    {
-      "name": "Real-time Notifications",
-      "description": "WebSocket-based notifications for likes, comments, and follows",
+      "description": "Like images, comment on posts, follow users, and receive notifications",
       "files": [
         "src/components/views/UV_Notifications.tsx",
-        "src/store/main.tsx",
         "backend/server.ts"
       ]
     },
@@ -72,16 +65,23 @@
       "description": "Responsive navigation with authentication-aware menu and footer",
       "files": [
         "src/components/views/GV_TopNav.tsx",
-        "src/components/views/GV_Footer.tsx",
-        "src/App.tsx"
+        "src/components/views/GV_Footer.tsx"
+      ]
+    },
+    {
+      "name": "Real-time Communication",
+      "description": "WebSocket integration for live notifications and updates",
+      "files": [
+        "src/store/main.tsx",
+        "backend/server.ts"
       ]
     },
     {
       "name": "Search & Discovery",
-      "description": "Search images by title/description and browse featured galleries",
+      "description": "Search images by title, description, and browse by categories",
       "files": [
         "src/components/views/UV_SearchResults.tsx",
-        "src/components/views/UV_FeaturedGalleries.tsx"
+        "backend/server.ts"
       ]
     }
   ],
