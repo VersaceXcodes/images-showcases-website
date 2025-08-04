@@ -31,7 +31,7 @@ const UV_ImageUpload: React.FC = () => {
   const uploadImagesMutation = useMutation({
     mutationFn: async (data: FormData) => {
       return axios.post(
-        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/images`,
+        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/api/images`,
         data,
         { headers: { Authorization: `Bearer ${authToken}` } }
       );

@@ -6,66 +6,61 @@
     "Express.js",
     "PostgreSQL",
     "Node.js",
-    "Zustand",
-    "TanStack Query",
     "Tailwind CSS",
-    "Radix UI",
-    "Socket.io",
+    "Zustand",
+    "React Query",
+    "Socket.IO",
     "JWT Authentication",
-    "Axios",
     "Multer",
-    "Zod"
+    "Zod",
+    "Radix UI"
   ],
   "features": [
     {
       "name": "User Authentication",
-      "description": "Complete user registration, login, logout, and session management with JWT tokens",
+      "description": "Complete login/logout system with JWT tokens, registration, and session management",
       "files": [
-        "src/store/main.tsx",
         "src/components/views/UV_LogInSignUp.tsx",
+        "src/store/main.tsx",
         "backend/server.ts"
       ]
     },
     {
       "name": "Image Gallery & Showcase",
-      "description": "Browse, search, and view image showcases with filtering and pagination",
+      "description": "Browse and view image showcases with search functionality and categorization",
       "files": [
         "src/components/views/UV_Homepage.tsx",
         "src/components/views/UV_Explore.tsx",
-        "src/components/views/UV_SingleImageView.tsx",
-        "src/components/views/UV_FeaturedGalleries.tsx"
+        "src/components/views/UV_SingleImageView.tsx"
       ]
     },
     {
-      "name": "Image Upload & Management",
-      "description": "Upload images with metadata, categorization, and file storage",
+      "name": "Image Upload",
+      "description": "Upload images with metadata including title, description, and tags",
       "files": [
         "src/components/views/UV_ImageUpload.tsx",
-        "src/components/views/UV_UploadImage.tsx",
         "backend/server.ts"
       ]
     },
     {
       "name": "User Profiles",
-      "description": "View and manage user profiles with bio, portfolio links, and user images",
+      "description": "User profile management and viewing other users' profiles",
       "files": [
         "src/components/views/UV_UserProfile.tsx",
-        "src/components/views/UV_Profile.tsx",
         "src/components/views/UV_UserDashboard.tsx"
       ]
     },
     {
       "name": "Social Features",
-      "description": "Like images, follow users, comment on images, and social interactions",
+      "description": "Like images, comment on images, and follow other users",
       "files": [
-        "src/components/views/UV_SingleImageView.tsx",
-        "src/components/views/UV_ImageDetails.tsx",
-        "backend/server.ts"
+        "backend/server.ts",
+        "src/store/main.tsx"
       ]
     },
     {
-      "name": "Notifications System",
-      "description": "Real-time notifications for user interactions and updates",
+      "name": "Real-time Notifications",
+      "description": "WebSocket-based notifications for likes, comments, and follows",
       "files": [
         "src/components/views/UV_Notifications.tsx",
         "src/store/main.tsx",
@@ -73,37 +68,20 @@
       ]
     },
     {
-      "name": "Search & Discovery",
-      "description": "Search images by title, description, categories with advanced filtering",
-      "files": [
-        "src/components/views/UV_SearchResults.tsx",
-        "src/components/views/UV_BrowseGallery.tsx",
-        "backend/server.ts"
-      ]
-    },
-    {
-      "name": "Collections Management",
-      "description": "Create and manage image collections and showcases",
-      "files": [
-        "src/components/views/UV_Collections.tsx",
-        "src/components/views/UV_ShowcaseCreation.tsx",
-        "src/components/views/UV_ShowcasePage.tsx"
-      ]
-    },
-    {
-      "name": "Real-time Communication",
-      "description": "WebSocket-based real-time updates for notifications and interactions",
-      "files": [
-        "src/store/main.tsx",
-        "backend/server.ts"
-      ]
-    },
-    {
-      "name": "Responsive Navigation",
-      "description": "Dynamic navigation with authentication-aware menu items and user dropdown",
+      "name": "Navigation & Layout",
+      "description": "Responsive navigation with authentication-aware menu and footer",
       "files": [
         "src/components/views/GV_TopNav.tsx",
-        "src/components/views/GV_Footer.tsx"
+        "src/components/views/GV_Footer.tsx",
+        "src/App.tsx"
+      ]
+    },
+    {
+      "name": "Search & Discovery",
+      "description": "Search images by title/description and browse featured galleries",
+      "files": [
+        "src/components/views/UV_SearchResults.tsx",
+        "src/components/views/UV_FeaturedGalleries.tsx"
       ]
     }
   ],
@@ -120,12 +98,12 @@
   "api_endpoints": [
     "/api/auth/register",
     "/api/auth/login", 
-    "/api/users/:user_id",
     "/api/images",
     "/api/images/search",
     "/api/comments",
     "/api/likes",
     "/api/follows",
+    "/api/users/:user_id",
     "/api/notifications"
   ]
 }
