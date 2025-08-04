@@ -1,16 +1,23 @@
-// server.mjs
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
-import pkg from 'pg';
-const { Pool } = pkg;
-import path from 'path';
+import * as dotenv from 'dotenv';
+import { Pool } from 'pg';
+import * as path from 'path';
 import { fileURLToPath } from 'url';
-import jwt from 'jsonwebtoken';
+import * as jwt from 'jsonwebtoken';
 import { Server } from 'socket.io';
 import { createServer } from 'http';
 import multer from 'multer';
-import fs from 'fs';
+import * as fs from 'fs';
+
+// Extend Express Request type to include user property
+declare global {
+  namespace Express {
+    interface Request {
+      user?: any;
+    }
+  }
+}
 
 // Import zod schemas
 import {
@@ -30,7 +37,7 @@ import {
   createLikeInputSchema,
   followSchema,
   createFollowInputSchema
-} from './schema.ts';
+} from './schema';
 
 dotenv.config();
 

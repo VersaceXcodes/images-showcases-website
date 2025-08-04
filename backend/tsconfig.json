@@ -1,11 +1,10 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+    "module": "ES2022",
+    "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "allowImportingTsExtensions": true,
     "strict": false,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
