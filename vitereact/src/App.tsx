@@ -15,6 +15,10 @@ import UV_UserDashboard from '@/components/views/UV_UserDashboard.tsx';
 import UV_Notifications from '@/components/views/UV_Notifications.tsx';
 import UV_FeaturedGalleries from '@/components/views/UV_FeaturedGalleries.tsx';
 import UV_LogInSignUp from '@/components/views/UV_LogInSignUp.tsx';
+import UV_About from '@/components/views/UV_About.tsx';
+import UV_Contact from '@/components/views/UV_Contact.tsx';
+import UV_Privacy from '@/components/views/UV_Privacy.tsx';
+import UV_Terms from '@/components/views/UV_Terms.tsx';
 
 /* Query Client */
 const queryClient = new QueryClient({
@@ -75,6 +79,10 @@ const App: React.FC = () => {
               <Route path="/profile/:user_id" element={<UV_UserProfile />} />
               <Route path="/featured" element={<UV_FeaturedGalleries />} />
               <Route path="/auth" element={<UV_LogInSignUp />} />
+              <Route path="/about" element={<UV_About />} />
+              <Route path="/contact" element={<UV_Contact />} />
+              <Route path="/privacy" element={<UV_Privacy />} />
+              <Route path="/terms" element={<UV_Terms />} />
 
               {/* Protected Routes */}
               <Route path="/upload" element={

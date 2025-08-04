@@ -3,16 +3,12 @@ import { Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { Image } from '@schema'; // Example import for type safety
-
+import { API_BASE_URL } from '@/lib/api';
 
 const fetchImages = async (category: string, tag: string, sort: string): Promise<Image[]> => {
-  const queryParams = new URLSearchParams();
-  if (category) queryParams.append('category_id', category);
-  if (tag) queryParams.append('tag', tag);
-  if (sort) queryParams.append('sort_order', sort);
-
-  const { data } = await axios.get<Image[]>(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/images/search`, {
-    params: { query: category || tag || '', limit: 20, offset: 0, sort_by: 'uploaded_at', sort_order: sort || 'DESC' },
+  const query = category || tag || '';
+  const { data } = await axios.get<Image[]>(`${API_BASE_URL}/images/search`, {
+    params: { query, limit: 20, offset: 0, sort_by: 'uploaded_at', sort_order: sort || 'DESC' },
   });
   return data;
 };

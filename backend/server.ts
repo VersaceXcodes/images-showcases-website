@@ -209,16 +209,44 @@ app.post('/api/images', authenticateToken, upload.single('image'), async (req, r
   }
 });
 
+// Get All Images (for homepage showcases)
+app.get('/api/images', async (req, res) => {
+  try {
+    const { limit = 20, offset = 0, sort_by = 'uploaded_at', sort_order = 'DESC' } = req.query;
+    const result = await pool.query(
+      `SELECT i.*, u.username FROM images i 
+       LEFT JOIN users u ON i.user_id = u.user_id 
+       ORDER BY ${sort_by} ${sort_order}
+       LIMIT $1 OFFSET $2`,
+      [limit, offset]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Images fetch error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // Search Images
 app.get('/api/images/search', async (req, res) => {
   try {
-    const searchParams = searchImageInputSchema.parse(req.query);
-    const result = await pool.query(
-      `SELECT * FROM images WHERE (title ILIKE $1 OR description ILIKE $1) 
-      ORDER BY ${searchParams.sort_by} ${searchParams.sort_order}
-      LIMIT $2 OFFSET $3`,
-      [`%${searchParams.query}%`, searchParams.limit, searchParams.offset]
-    );
+    const { query = '', limit = 20, offset = 0, sort_by = 'uploaded_at', sort_order = 'DESC' } = req.query;
+    
+    let sqlQuery = `SELECT i.*, u.username FROM images i 
+                    LEFT JOIN users u ON i.user_id = u.user_id`;
+    let params = [];
+    let paramIndex = 1;
+    
+    if (query && typeof query === 'string' && query.trim() !== '') {
+      sqlQuery += ` WHERE (i.title ILIKE $${paramIndex} OR i.description ILIKE $${paramIndex} OR i.categories ILIKE $${paramIndex})`;
+      params.push(`%${query}%`);
+      paramIndex++;
+    }
+    
+    sqlQuery += ` ORDER BY ${sort_by} ${sort_order} LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    params.push(limit, offset);
+    
+    const result = await pool.query(sqlQuery, params);
     res.json(result.rows);
   } catch (error) {
     console.error('Image search error:', error);

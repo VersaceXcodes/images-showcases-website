@@ -7,9 +7,12 @@ import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '@/lib/api';
 
 const fetchShowcases = async (category?: string): Promise<Showcase[]> => {
-  const { data } = await axios.get(`${API_BASE_URL}/images/search`, {
-    params: { query: category || '', limit: 20, offset: 0, sort_by: 'uploaded_at', sort_order: 'DESC' },
-  });
+  const endpoint = category ? `${API_BASE_URL}/images/search` : `${API_BASE_URL}/images`;
+  const params = category 
+    ? { query: category, limit: 20, offset: 0, sort_by: 'uploaded_at', sort_order: 'DESC' }
+    : { limit: 20, offset: 0, sort_by: 'uploaded_at', sort_order: 'DESC' };
+    
+  const { data } = await axios.get(endpoint, { params });
   
   // Transform images to showcase format for display
   const showcases: Showcase[] = data.map((image: any) => ({
