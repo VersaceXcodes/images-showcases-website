@@ -9,6 +9,7 @@ import { Server } from 'socket.io';
 import { createServer } from 'http';
 import multer from 'multer';
 import * as fs from 'fs';
+import { v4 as uuidv4 } from 'uuid';
 
 // Extend Express Request type to include user property
 declare global {
@@ -76,18 +77,19 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const port = Number(process.env.PORT) || 3000;
-app.use(cors());
-app.use(express.json({ limit: "5mb" }));
 
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: [
+    process.env.FRONTEND_URL || 'http://localhost:5173',
+    'https://123images-showcases-website.launchpulse.ai'
+  ],
   credentials: true,
 }));
-app.use(express.json());
+app.use(express.json({ limit: "5mb" }));
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -129,14 +131,15 @@ app.post('/api/auth/register', async (req, res) => {
   try {
     const validatedBody = createUserInputSchema.parse(req.body);
 
-    const existingUser = await pool.query('SELECT id FROM users WHERE email = $1', [validatedBody.email]);
+    const existingUser = await pool.query('SELECT user_id FROM users WHERE email = $1', [validatedBody.email]);
     if (existingUser.rows.length > 0) {
       return res.status(400).json({ message: 'User with this email already exists' });
     }
 
+    const userId = uuidv4();
     const result = await pool.query(
-      'INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3) RETURNING user_id, email, username, created_at',
-      [validatedBody.email.toLowerCase(), validatedBody.username, validatedBody.password_hash]
+      'INSERT INTO users (user_id, email, username, password_hash) VALUES ($1, $2, $3, $4) RETURNING user_id, email, username, created_at',
+      [userId, validatedBody.email.toLowerCase(), validatedBody.username, validatedBody.password_hash]
     );
 
     const user = result.rows[0];
@@ -191,15 +194,16 @@ app.post('/api/auth/login', async (req, res) => {
 app.post('/api/images', authenticateToken, upload.single('image'), async (req, res) => {
   try {
     const imageUrl = `/storage/${req.file.filename}`;
+    const imageId = uuidv4();
     const validatedBody = createImageInputSchema.parse({
       ...req.body,
       image_url: imageUrl
     });
 
     const result = await pool.query(
-      `INSERT INTO images (user_id, title, description, image_url, categories) 
-      VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [validatedBody.user_id, validatedBody.title, validatedBody.description, validatedBody.image_url, validatedBody.categories]
+      `INSERT INTO images (image_id, user_id, title, description, image_url, categories) 
+      VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [imageId, validatedBody.user_id, validatedBody.title, validatedBody.description, validatedBody.image_url, validatedBody.categories]
     );
 
     res.status(201).json(result.rows[0]);
@@ -258,10 +262,11 @@ app.get('/api/images/search', async (req, res) => {
 app.post('/api/comments', authenticateToken, async (req, res) => {
   try {
     const validatedBody = createCommentInputSchema.parse(req.body);
+    const commentId = uuidv4();
     const result = await pool.query(
-      `INSERT INTO comments (image_id, user_id, content) VALUES ($1, $2, $3) 
+      `INSERT INTO comments (comment_id, image_id, user_id, content) VALUES ($1, $2, $3, $4) 
       RETURNING *`,
-      [validatedBody.image_id, validatedBody.user_id, validatedBody.content]
+      [commentId, validatedBody.image_id, validatedBody.user_id, validatedBody.content]
     );
 
     const newComment = result.rows[0];
@@ -278,9 +283,10 @@ app.post('/api/comments', authenticateToken, async (req, res) => {
 app.post('/api/likes', authenticateToken, async (req, res) => {
   try {
     const validatedBody = createLikeInputSchema.parse(req.body);
+    const likeId = uuidv4();
     const result = await pool.query(
-      `INSERT INTO likes (image_id, user_id) VALUES ($1, $2) RETURNING *`,
-      [validatedBody.image_id, validatedBody.user_id]
+      `INSERT INTO likes (like_id, image_id, user_id) VALUES ($1, $2, $3) RETURNING *`,
+      [likeId, validatedBody.image_id, validatedBody.user_id]
     );
 
     const newLike = result.rows[0];
