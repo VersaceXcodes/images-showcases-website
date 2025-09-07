@@ -1,0 +1,229 @@
+{
+  "generated_at": "2025-01-07T10:30:00Z",
+  "project_name": "123Images Showcase Website",
+  "description": "A full-stack image sharing and showcase platform with user authentication, image uploads, social features, and real-time interactions",
+  "tech_stack": [
+    "React 18.3.1",
+    "TypeScript 5.5.3", 
+    "Vite 5.4.0",
+    "Express.js 4.19.2",
+    "Node.js",
+    "PostgreSQL",
+    "Socket.io",
+    "TanStack React Query 5.0.0",
+    "Zustand",
+    "Tailwind CSS 3.4.8",
+    "Radix UI Components",
+    "Axios 1.7.7",
+    "JWT Authentication",
+    "Multer (File Uploads)",
+    "Zod (Schema Validation)"
+  ],
+  "architecture": {
+    "frontend": {
+      "framework": "React with Vite",
+      "state_management": "Zustand with persistence",
+      "routing": "React Router DOM 6.26.0",
+      "styling": "Tailwind CSS with Radix UI components",
+      "data_fetching": "TanStack React Query with Axios",
+      "real_time": "Socket.io client"
+    },
+    "backend": {
+      "framework": "Express.js with TypeScript",
+      "database": "PostgreSQL with connection pooling",
+      "authentication": "JWT tokens",
+      "file_uploads": "Multer with local storage",
+      "validation": "Zod schemas",
+      "real_time": "Socket.io server"
+    }
+  },
+  "features": [
+    {
+      "name": "User Authentication",
+      "description": "Complete user registration, login, and session management with JWT tokens",
+      "files": [
+        "vitereact/src/components/views/UV_LogInSignUp.tsx",
+        "vitereact/src/store/main.tsx",
+        "backend/server.ts (lines 130-191)"
+      ],
+      "endpoints": ["/api/auth/register", "/api/auth/login"]
+    },
+    {
+      "name": "Image Showcase System",
+      "description": "Browse, search, and view image showcases with category filtering",
+      "files": [
+        "vitereact/src/components/views/UV_Homepage.tsx",
+        "vitereact/src/components/views/UV_Explore.tsx",
+        "vitereact/src/components/views/UV_SingleImageView.tsx"
+      ],
+      "endpoints": ["/api/images", "/api/images/search"]
+    },
+    {
+      "name": "Image Upload",
+      "description": "Authenticated users can upload images with titles, descriptions, and categories",
+      "files": [
+        "vitereact/src/components/views/UV_ImageUpload.tsx",
+        "backend/server.ts (lines 194-214)"
+      ],
+      "endpoints": ["/api/images (POST)"]
+    },
+    {
+      "name": "User Profiles",
+      "description": "View user profiles and manage personal dashboard",
+      "files": [
+        "vitereact/src/components/views/UV_UserProfile.tsx",
+        "vitereact/src/components/views/UV_UserDashboard.tsx"
+      ],
+      "endpoints": ["/api/users/:user_id"]
+    },
+    {
+      "name": "Social Features",
+      "description": "Like images, follow users, and comment on showcases",
+      "files": [
+        "backend/server.ts (lines 262-319)"
+      ],
+      "endpoints": ["/api/likes", "/api/follows", "/api/comments"]
+    },
+    {
+      "name": "Notifications System",
+      "description": "Real-time notifications for user interactions",
+      "files": [
+        "vitereact/src/components/views/UV_Notifications.tsx",
+        "backend/server.ts (lines 339-355)"
+      ],
+      "endpoints": ["/api/notifications"]
+    },
+    {
+      "name": "Featured Galleries",
+      "description": "Curated image galleries and collections",
+      "files": [
+        "vitereact/src/components/views/UV_FeaturedGalleries.tsx"
+      ]
+    },
+    {
+      "name": "Real-time Communication",
+      "description": "WebSocket-based real-time updates for likes, comments, and follows",
+      "files": [
+        "backend/server.ts (lines 358-371)",
+        "vitereact/src/store/main.tsx (lines 252-278)"
+      ]
+    },
+    {
+      "name": "Static Pages",
+      "description": "About, Contact, Privacy Policy, and Terms of Service pages",
+      "files": [
+        "vitereact/src/components/views/UV_About.tsx",
+        "vitereact/src/components/views/UV_Contact.tsx",
+        "vitereact/src/components/views/UV_Privacy.tsx",
+        "vitereact/src/components/views/UV_Terms.tsx"
+      ]
+    }
+  ],
+  "database_tables": [
+    "users",
+    "images", 
+    "image_tags",
+    "comments",
+    "likes",
+    "follows",
+    "collections",
+    "collection_images",
+    "favorites",
+    "notifications"
+  ],
+  "api_endpoints": [
+    {
+      "method": "POST",
+      "path": "/api/auth/register",
+      "description": "User registration",
+      "authentication": false
+    },
+    {
+      "method": "POST", 
+      "path": "/api/auth/login",
+      "description": "User login",
+      "authentication": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/images",
+      "description": "Upload new image",
+      "authentication": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/images",
+      "description": "Get all images with pagination",
+      "authentication": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/images/search",
+      "description": "Search images by query",
+      "authentication": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/comments",
+      "description": "Add comment to image",
+      "authentication": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/likes",
+      "description": "Like an image",
+      "authentication": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/follows",
+      "description": "Follow a user",
+      "authentication": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/users/:user_id",
+      "description": "Get user details",
+      "authentication": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/notifications",
+      "description": "Get user notifications",
+      "authentication": true
+    }
+  ],
+  "key_components": [
+    {
+      "name": "App Router",
+      "file": "vitereact/src/App.tsx",
+      "description": "Main application router with protected routes and authentication"
+    },
+    {
+      "name": "Global Store",
+      "file": "vitereact/src/store/main.tsx", 
+      "description": "Zustand store managing authentication, user data, and real-time connections"
+    },
+    {
+      "name": "API Client",
+      "file": "vitereact/src/lib/api.ts",
+      "description": "Axios configuration with authentication interceptors"
+    },
+    {
+      "name": "Navigation",
+      "file": "vitereact/src/components/views/GV_TopNav.tsx",
+      "description": "Top navigation bar with authentication-aware menu"
+    },
+    {
+      "name": "Footer",
+      "file": "vitereact/src/components/views/GV_Footer.tsx",
+      "description": "Global footer component"
+    }
+  ],
+  "deployment": {
+    "frontend_url": "https://123images-showcases-website.launchpulse.ai",
+    "backend_url": "https://123images-showcases-website.launchpulse.ai/api",
+    "platform": "Fly.io (based on Dockerfile and fly.toml)",
+    "environment": "Production"
+  }
+}

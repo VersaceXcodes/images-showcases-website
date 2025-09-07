@@ -1,0 +1,192 @@
+{
+  "generated_at": "2025-01-07T10:30:00Z",
+  "user_structure": {
+    "table_name": "users",
+    "role_field": null,
+    "registration_endpoint": "/api/auth/register",
+    "login_endpoint": "/api/auth/login",
+    "password_field": "password_hash",
+    "notes": "Passwords are stored as plain text in seed data for testing purposes"
+  },
+  "total_users": 6,
+  "verified_users": 3,
+  "users": [
+    {
+      "user_id": "user-1",
+      "email": "demo@example.com",
+      "username": "demo_user",
+      "password": "hashed_password_123",
+      "role": "user",
+      "name": "Demo User",
+      "verified": true,
+      "source": "seed_data",
+      "token": null
+    },
+    {
+      "user_id": "user-2", 
+      "email": "artist@example.com",
+      "username": "creative_artist",
+      "password": "hashed_password_456",
+      "role": "user",
+      "name": "Creative Artist",
+      "verified": true,
+      "source": "seed_data",
+      "token": null
+    },
+    {
+      "user_id": "user-3",
+      "email": "photographer@example.com", 
+      "username": "photo_pro",
+      "password": "hashed_password_789",
+      "role": "user",
+      "name": "Photo Pro",
+      "verified": true,
+      "source": "seed_data",
+      "token": null
+    },
+    {
+      "email": "admin@test.com",
+      "username": "admin_user",
+      "password": "AdminPass123!",
+      "role": "admin",
+      "name": "Admin User",
+      "verified": false,
+      "source": "generated",
+      "token": null,
+      "note": "Generated admin user for testing - needs to be created via API"
+    },
+    {
+      "email": "testuser@test.com",
+      "username": "test_user",
+      "password": "TestPass123!",
+      "role": "user", 
+      "name": "Test User",
+      "verified": false,
+      "source": "generated",
+      "token": null,
+      "note": "Generated test user for automated testing"
+    },
+    {
+      "email": "guest@test.com",
+      "username": "guest_user",
+      "password": "GuestPass123!",
+      "role": "guest",
+      "name": "Guest User",
+      "verified": false,
+      "source": "generated", 
+      "token": null,
+      "note": "Generated guest user for limited access testing"
+    }
+  ],
+  "by_role": {
+    "user": [
+      {
+        "email": "demo@example.com",
+        "password": "hashed_password_123",
+        "username": "demo_user",
+        "verified": true
+      },
+      {
+        "email": "artist@example.com", 
+        "password": "hashed_password_456",
+        "username": "creative_artist",
+        "verified": true
+      },
+      {
+        "email": "photographer@example.com",
+        "password": "hashed_password_789", 
+        "username": "photo_pro",
+        "verified": true
+      },
+      {
+        "email": "testuser@test.com",
+        "password": "TestPass123!",
+        "username": "test_user",
+        "verified": false
+      }
+    ],
+    "admin": [
+      {
+        "email": "admin@test.com",
+        "password": "AdminPass123!",
+        "username": "admin_user", 
+        "verified": false
+      }
+    ],
+    "guest": [
+      {
+        "email": "guest@test.com",
+        "password": "GuestPass123!",
+        "username": "guest_user",
+        "verified": false
+      }
+    ]
+  },
+  "test_scenarios": {
+    "valid_login": {
+      "description": "Test successful login with seed data users",
+      "users": ["demo@example.com", "artist@example.com", "photographer@example.com"],
+      "expected_result": "Should return user object and JWT token"
+    },
+    "registration": {
+      "description": "Test user registration with new accounts",
+      "users": ["admin@test.com", "testuser@test.com", "guest@test.com"],
+      "expected_result": "Should create new user and return JWT token"
+    },
+    "invalid_credentials": {
+      "description": "Test login with wrong password",
+      "test_cases": [
+        {"email": "demo@example.com", "password": "wrong_password"},
+        {"email": "nonexistent@example.com", "password": "any_password"}
+      ],
+      "expected_result": "Should return 400 error with 'Invalid email or password'"
+    }
+  },
+  "authentication_flow": {
+    "login_payload": {
+      "email": "string",
+      "password": "string"
+    },
+    "register_payload": {
+      "email": "string", 
+      "username": "string",
+      "password_hash": "string"
+    },
+    "response_format": {
+      "message": "string",
+      "user": {
+        "user_id": "string",
+        "email": "string", 
+        "username": "string",
+        "created_at": "timestamp"
+      },
+      "token": "jwt_string"
+    }
+  },
+  "sample_images": [
+    {
+      "image_id": "img-1",
+      "user_id": "user-1", 
+      "title": "Beautiful Sunset",
+      "description": "A stunning sunset over the mountains",
+      "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+      "categories": "nature,landscape,sunset"
+    },
+    {
+      "image_id": "img-2",
+      "user_id": "user-2",
+      "title": "City Lights", 
+      "description": "Urban nightscape with vibrant city lights",
+      "image_url": "https://images.unsplash.com/photo-1514565131-fce0801e5785?w=800",
+      "categories": "urban,city,night"
+    },
+    {
+      "image_id": "img-3",
+      "user_id": "user-3",
+      "title": "Ocean Waves",
+      "description": "Peaceful ocean waves at dawn", 
+      "image_url": "https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=800",
+      "categories": "ocean,nature,peaceful"
+    }
+  ]
+}
