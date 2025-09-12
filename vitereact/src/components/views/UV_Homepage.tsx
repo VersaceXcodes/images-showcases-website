@@ -5,6 +5,7 @@ import { useAppStore } from '@/store/main';
 import { Showcase } from '@/types/index';
 import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '@/lib/api';
+import cofounderImage from '@/assets/cofounder.webp';
 
 const fetchShowcases = async (category?: string): Promise<Showcase[]> => {
   const endpoint = category ? `${API_BASE_URL}/images/search` : `${API_BASE_URL}/images`;
@@ -45,23 +46,32 @@ const UV_Homepage: React.FC = () => {
   return (
     <>
       <div className="min-h-screen flex flex-col items-center bg-gray-50">
+        <div className="w-full relative">
+          <img 
+            src={cofounderImage} 
+            alt="Hero Image" 
+            className="w-full h-64 sm:h-80 lg:h-96 object-cover"
+          />
+          <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+            <div className="text-center text-white">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4">Explore Showcases</h1>
+              <p className="text-lg sm:text-xl lg:text-2xl">
+                Discover the latest and most popular showcases. {isAuthenticated && "Recommendations just for you!"}
+              </p>
+            </div>
+          </div>
+        </div>
+
         {isLoading && (
           <div className="flex items-center justify-center w-full h-64">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
           </div>
         )}
         {isError && (
-          <div className="text-red-500 text-center">
+          <div className="text-red-500 text-center mt-8">
             <p>Failed to load showcases. Please try again later.</p>
           </div>
         )}
-        
-        <div className="text-center mt-8">
-          <h1 className="text-3xl font-bold text-gray-800">Explore Showcases</h1>
-          <p className="mt-2 text-gray-600">
-            Discover the latest and most popular showcases. {isAuthenticated && "Recommendations just for you!"}
-          </p>
-        </div>
 
         {showcases && showcases.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8 px-4 sm:px-6 lg:px-8">
