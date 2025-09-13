@@ -41,8 +41,8 @@ const io = new Server(httpServer, {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const port = Number(process.env.PORT) || 3000;
-// Serve static files from the 'public' directory
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve static files from the vitereact build directory
+app.use(express.static(path.join(__dirname, '../vitereact/dist')));
 // Middleware
 app.use(cors({
     origin: [
@@ -271,8 +271,8 @@ io.on('connection', (socket) => {
     // e.g., handling 'showcase/updates', 'image/comments', 'image/likes'
 });
 // Catch-all route for SPA routing
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.get(/^(?!\/api).*/, (req, res) => {
+    res.sendFile(path.join(__dirname, '../vitereact/dist', 'index.html'));
 });
 // Start the server
 httpServer.listen(port, '0.0.0.0', () => {
