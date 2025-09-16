@@ -49,6 +49,11 @@ apiClient.interceptors.response.use(
       response.data = { success: false, message: 'No data received' };
     }
     
+    // Ensure response has proper structure for consistency
+    if (typeof response.data === 'object' && !response.data.timestamp) {
+      response.data.timestamp = new Date().toISOString();
+    }
+    
     return response;
   },
   async (error) => {
@@ -74,6 +79,10 @@ apiClient.interceptors.response.use(
       if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
         console.error('Server unreachable');
         return Promise.reject(new Error('Server is unreachable - please try again later'));
+      }
+      if (error.code === 'ERR_INTERNET_DISCONNECTED') {
+        console.error('Internet connection lost');
+        return Promise.reject(new Error('Internet connection lost - please check your connection'));
       }
       console.error('Network error - server may be unreachable');
       return Promise.reject(new Error('Network error - please check your connection'));
@@ -121,7 +130,14 @@ apiClient.interceptors.response.use(
         message = 'Server error - please try again later';
         break;
       case 502:
-        message = 'Bad gateway - server is temporarily unavailable';
+        message = 'Bad gateway - server is temporarily unavailable. Please try again in a few moments.';
+        // Log additional details for 502 errors
+        console.error('502 Bad Gateway Details:', {
+          url: error.config?.url,
+          method: error.config?.method,
+          headers: error.config?.headers,
+          data: error.response?.data
+        });
         break;
       case 503:
         message = 'Service unavailable - please try again later';

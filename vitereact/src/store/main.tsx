@@ -1,8 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import axios from 'axios';
 import { io, Socket } from 'socket.io-client';
-import { API_BASE_URL } from '@/lib/api';
+import { API_BASE_URL, apiClient } from '@/lib/api';
 
 // Types
 interface User {
@@ -92,11 +91,7 @@ export const useAppStore = create<AppState>()(
         }));
 
         try {
-          const response = await axios.post(
-            `${API_BASE_URL}/auth/login`,
-            { email, password },
-            { headers: { 'Content-Type': 'application/json' } }
-          );
+          const response = await apiClient.post('/auth/login', { email, password });
 
           const { user, token } = response.data;
 
@@ -133,11 +128,11 @@ export const useAppStore = create<AppState>()(
         }));
 
         try {
-          const response = await axios.post(
-            `${API_BASE_URL}/auth/register`,
-            { email, username, password_hash: password },
-            { headers: { 'Content-Type': 'application/json' } }
-          );
+          const response = await apiClient.post('/auth/register', { 
+            email, 
+            username, 
+            password_hash: password 
+          });
 
           const { user, token } = response.data;
 
@@ -182,10 +177,7 @@ export const useAppStore = create<AppState>()(
         try {
           // First check if the API is reachable with a shorter timeout
           console.log('Checking API health...');
-          const healthResponse = await axios.get(`${API_BASE_URL}/health`, { 
-            timeout: 5000,
-            headers: { 'Accept': 'application/json' }
-          });
+          const healthResponse = await apiClient.get('/health', { timeout: 5000 });
           
           if (!healthResponse.data || healthResponse.data.status !== 'ok') {
             throw new Error('API health check failed');
@@ -193,17 +185,9 @@ export const useAppStore = create<AppState>()(
           
           console.log('API is healthy, validating user token...');
           // Then validate the user token
-          const response = await axios.get(
-            `${API_BASE_URL}/users/${currentUser.user_id}`,
-            { 
-              headers: { 
-                'Authorization': `Bearer ${token}`,
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-              },
-              timeout: 10000
-            }
-          );
+          const response = await apiClient.get(`/users/${currentUser.user_id}`, { 
+            timeout: 10000 
+          });
 
           const user = response.data;
           console.log('User token validated successfully');
@@ -261,12 +245,7 @@ export const useAppStore = create<AppState>()(
         if (!token) return;
 
         try {
-          const response = await axios.get(
-            `${API_BASE_URL}/notifications`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
+          const response = await apiClient.get('/notifications');
           set({ notifications: response.data });
         } catch (error: any) {
           console.error('Failed to fetch notifications:', error.message);

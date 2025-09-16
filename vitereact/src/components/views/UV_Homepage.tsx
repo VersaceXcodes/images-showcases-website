@@ -1,50 +1,70 @@
 import React, { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import { useAppStore } from '@/store/main';
 import { Showcase } from '@/types/index';
 import { Link } from 'react-router-dom';
-import { API_BASE_URL } from '@/lib/api';
+import { apiClient } from '@/lib/api';
 import cofounderImage from '@/assets/cofounder.webp';
 
 const fetchShowcases = async (category?: string): Promise<Showcase[]> => {
-  const endpoint = category ? `${API_BASE_URL}/images/search` : `${API_BASE_URL}/images`;
-  const params = category 
-    ? { query: category, limit: 20, offset: 0, sort_by: 'uploaded_at', sort_order: 'DESC' }
-    : { limit: 20, offset: 0, sort_by: 'uploaded_at', sort_order: 'DESC' };
+  try {
+    const endpoint = category ? '/images/search' : '/images';
+    const params = category 
+      ? { query: category, limit: 20, offset: 0, sort_by: 'uploaded_at', sort_order: 'DESC' }
+      : { limit: 20, offset: 0, sort_by: 'uploaded_at', sort_order: 'DESC' };
+      
+    console.log(`Fetching showcases from ${endpoint} with params:`, params);
     
-  const response = await axios.get(endpoint, { 
-    params,
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
-    timeout: 15000
-  });
-  
-  // Handle both old and new API response formats
-  let images = response.data;
-  if (response.data && response.data.success && response.data.data) {
-    images = response.data.data;
-  } else if (Array.isArray(response.data)) {
-    images = response.data;
-  } else {
-    console.error('Unexpected API response format:', response.data);
-    throw new Error('Invalid response format from server');
+    const response = await apiClient.get(endpoint, { 
+      params,
+      timeout: 15000
+    });
+    
+    console.log('API Response:', response.data);
+    
+    // Handle both old and new API response formats
+    let images = response.data;
+    if (response.data && response.data.success && response.data.data) {
+      images = response.data.data;
+    } else if (Array.isArray(response.data)) {
+      images = response.data;
+    } else if (response.data && typeof response.data === 'object') {
+      // If it's an object but not in expected format, log and handle gracefully
+      console.warn('Unexpected API response format:', response.data);
+      images = [];
+    } else {
+      console.error('Invalid API response format:', response.data);
+      throw new Error('Invalid response format from server');
+    }
+    
+    // Ensure images is an array
+    if (!Array.isArray(images)) {
+      console.error('Images data is not an array:', images);
+      throw new Error('Server returned invalid data format');
+    }
+    
+    // Transform images to showcase format for display
+    const showcases: Showcase[] = images.map((image: any) => ({
+      showcase_id: image.image_id,
+      user_id: image.user_id,
+      title: image.title || 'Untitled',
+      description: image.description || '',
+      tags: image.categories ? image.categories.split(',').map((tag: string) => tag.trim()) : [],
+      images: [{ 
+        image_id: image.image_id, 
+        image_url: image.image_url, 
+        title: image.title, 
+        description: image.description 
+      }],
+      created_at: new Date(image.uploaded_at || Date.now())
+    }));
+    
+    console.log(`Successfully transformed ${showcases.length} showcases`);
+    return showcases;
+  } catch (error) {
+    console.error('Error fetching showcases:', error);
+    throw error;
   }
-  
-  // Transform images to showcase format for display
-  const showcases: Showcase[] = images.map((image: any) => ({
-    showcase_id: image.image_id,
-    user_id: image.user_id,
-    title: image.title,
-    description: image.description,
-    tags: image.categories ? image.categories.split(',') : [],
-    images: [{ image_id: image.image_id, image_url: image.image_url, title: image.title, description: image.description }],
-    created_at: new Date(image.uploaded_at)
-  }));
-  
-  return showcases;
 };
 
 const UV_Homepage: React.FC = () => {
@@ -55,8 +75,17 @@ const UV_Homepage: React.FC = () => {
     queryKey: ['showcases', category],
     queryFn: () => fetchShowcases(category || undefined),
     enabled: true,
-    retry: 2,
-    retryDelay: 1000,
+    retry: (failureCount, error) => {
+      // Don't retry on 4xx errors (client errors)
+      if (error.message.includes('400') || error.message.includes('401') || error.message.includes('403') || error.message.includes('404')) {
+        return false;
+      }
+      // Retry up to 3 times for other errors
+      return failureCount < 3;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
   });
 
   useEffect(() => {

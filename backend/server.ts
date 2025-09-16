@@ -87,6 +87,39 @@ pool.on('remove', (client) => {
   console.log('Client removed from pool');
 });
 
+// Test database connection on startup
+const testDatabaseConnection = async () => {
+  let client;
+  try {
+    console.log('Testing database connection...');
+    client = await pool.connect();
+    const result = await client.query('SELECT NOW() as current_time, version() as db_version');
+    console.log('Database connection successful:', {
+      time: result.rows[0].current_time,
+      version: result.rows[0].db_version.split(' ')[0],
+      pool_stats: {
+        total: pool.totalCount,
+        idle: pool.idleCount,
+        waiting: pool.waitingCount
+      }
+    });
+  } catch (error) {
+    console.error('Database connection failed:', {
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
+    throw error;
+  } finally {
+    if (client) {
+      client.release();
+    }
+  }
+};
+
+// Test connection on startup
+testDatabaseConnection().catch(console.error);
+
 const app = express();
 
 // HTTP server creation for real-time interactions
@@ -127,7 +160,9 @@ app.use(cors({
       // Add more flexible origin matching
       /^https:\/\/.*\.launchpulse\.ai$/,
       /^http:\/\/localhost:\d+$/,
-      /^http:\/\/127\.0\.0\.1:\d+$/
+      /^http:\/\/127\.0\.0\.1:\d+$/,
+      /^https:\/\/.*\.vercel\.app$/,
+      /^https:\/\/.*\.netlify\.app$/
     ];
     
     const isAllowed = allowedOrigins.some(allowedOrigin => {
@@ -143,28 +178,72 @@ app.use(cors({
       callback(null, true);
     } else {
       console.warn(`CORS blocked origin: ${origin}`);
-      // For debugging purposes, allow all origins but log the warning
+      // For production debugging, allow all origins but log the warning
       callback(null, true);
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'Cache-Control'],
-  exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Requested-With', 
+    'Accept', 
+    'Origin', 
+    'Cache-Control',
+    'X-CSRF-Token',
+    'X-Requested-With',
+    'Accept-Version',
+    'Content-Length',
+    'Content-MD5',
+    'Date',
+    'X-Api-Version'
+  ],
+  exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar', 'X-Total-Count'],
   optionsSuccessStatus: 200,
-  preflightContinue: false
+  preflightContinue: false,
+  maxAge: 86400 // 24 hours
 }));
 app.use(express.json({ limit: "5mb" }));
+
+// Handle preflight requests explicitly
+app.options('*', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', req.get('Origin') || '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Cache-Control, X-CSRF-Token, X-Api-Version');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Max-Age', '86400');
+  res.status(200).end();
+});
 
 // Add request logging and timeout middleware
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - Origin: ${req.get('Origin') || 'none'}`);
   
   // Set proper headers for all responses
-  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  
+  // Override res.json to ensure consistent response format
+  const originalJson = res.json;
+  res.json = function(body) {
+    // Ensure we always send valid JSON
+    if (body === null || body === undefined) {
+      body = { success: false, message: 'No data available' };
+    }
+    
+    // Add timestamp to all responses if not present
+    if (typeof body === 'object' && !body.timestamp) {
+      body.timestamp = new Date().toISOString();
+    }
+    
+    return originalJson.call(this, body);
+  };
   
   // Set timeout handlers
   const timeoutDuration = 30000; // 30 seconds
@@ -173,6 +252,7 @@ app.use((req, res, next) => {
     console.error(`Request timeout for ${req.method} ${req.path}`);
     if (!res.headersSent) {
       res.status(408).json({ 
+        success: false,
         error: 'Request timeout',
         message: 'The request took too long to process',
         timestamp: new Date().toISOString()
@@ -184,6 +264,7 @@ app.use((req, res, next) => {
     console.error(`Response timeout for ${req.method} ${req.path}`);
     if (!res.headersSent) {
       res.status(408).json({ 
+        success: false,
         error: 'Response timeout',
         message: 'The response took too long to send',
         timestamp: new Date().toISOString()
@@ -371,6 +452,7 @@ app.post('/api/images', authenticateToken, upload.single('image'), async (req, r
 
 // Get All Images (for homepage showcases)
 app.get('/api/images', async (req, res) => {
+  let client;
   try {
     const { limit = 20, offset = 0, sort_by = 'uploaded_at', sort_order = 'DESC' } = req.query;
     
@@ -384,7 +466,12 @@ app.get('/api/images', async (req, res) => {
     const limitNum = Math.min(Math.max(parseInt(limit as string) || 20, 1), 100); // Max 100 items
     const offsetNum = Math.max(parseInt(offset as string) || 0, 0);
     
-    const result = await pool.query(
+    console.log(`Fetching images with params: limit=${limitNum}, offset=${offsetNum}, sortBy=${sortBy}, sortOrder=${sortOrder}`);
+    
+    // Get a client from the pool with timeout
+    client = await pool.connect();
+    
+    const result = await client.query(
       `SELECT i.*, u.username FROM images i 
        LEFT JOIN users u ON i.user_id = u.user_id 
        ORDER BY i.${sortBy} ${sortOrder}
@@ -392,32 +479,55 @@ app.get('/api/images', async (req, res) => {
       [limitNum, offsetNum]
     );
     
-    console.log(`Fetched ${result.rows.length} images`);
+    console.log(`Successfully fetched ${result.rows.length} images`);
     
-    res.setHeader('Content-Type', 'application/json');
+    // Ensure all image objects have required fields
+    const sanitizedImages = result.rows.map(image => ({
+      ...image,
+      title: image.title || 'Untitled',
+      description: image.description || '',
+      image_url: image.image_url || '',
+      categories: image.categories || '',
+      uploaded_at: image.uploaded_at || new Date().toISOString(),
+      username: image.username || 'Unknown User'
+    }));
+    
     res.json({
       success: true,
-      data: result.rows,
+      data: sanitizedImages,
       pagination: {
         limit: limitNum,
         offset: offsetNum,
-        count: result.rows.length
+        count: sanitizedImages.length
       },
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Images fetch error:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Failed to fetch images',
-      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error',
+    console.error('Images fetch error:', {
+      message: error.message,
+      stack: error.stack,
       timestamp: new Date().toISOString()
     });
+    
+    if (!res.headersSent) {
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to fetch images',
+        message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error',
+        data: [],
+        timestamp: new Date().toISOString()
+      });
+    }
+  } finally {
+    if (client) {
+      client.release();
+    }
   }
 });
 
 // Search Images
 app.get('/api/images/search', async (req, res) => {
+  let client;
   try {
     const { query = '', limit = 20, offset = 0, sort_by = 'uploaded_at', sort_order = 'DESC' } = req.query;
     
@@ -428,6 +538,9 @@ app.get('/api/images/search', async (req, res) => {
     const sortBy = validSortColumns.includes(sort_by as string) ? sort_by : 'uploaded_at';
     const sortOrder = validSortOrders.includes(sort_order as string) ? sort_order : 'DESC';
     
+    const limitNum = Math.min(Math.max(parseInt(limit as string) || 20, 1), 100);
+    const offsetNum = Math.max(parseInt(offset as string) || 0, 0);
+    
     let sqlQuery = `SELECT i.*, u.username FROM images i 
                     LEFT JOIN users u ON i.user_id = u.user_id`;
     let params = [];
@@ -435,22 +548,63 @@ app.get('/api/images/search', async (req, res) => {
     
     if (query && typeof query === 'string' && query.trim() !== '') {
       sqlQuery += ` WHERE (i.title ILIKE $${paramIndex} OR i.description ILIKE $${paramIndex} OR i.categories ILIKE $${paramIndex})`;
-      params.push(`%${query}%`);
+      params.push(`%${query.trim()}%`);
       paramIndex++;
     }
     
     sqlQuery += ` ORDER BY i.${sortBy} ${sortOrder} LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
-    params.push(parseInt(limit as string), parseInt(offset as string));
+    params.push(limitNum, offsetNum);
     
-    const result = await pool.query(sqlQuery, params);
+    console.log(`Searching images with query: "${query}", limit=${limitNum}, offset=${offsetNum}`);
+    
+    client = await pool.connect();
+    const result = await client.query(sqlQuery, params);
+    
     console.log(`Search query: "${query}", found ${result.rows.length} images`);
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Image search error:', error);
-    res.status(500).json({ 
-      message: 'Failed to search images', 
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' 
+    
+    // Ensure all image objects have required fields
+    const sanitizedImages = result.rows.map(image => ({
+      ...image,
+      title: image.title || 'Untitled',
+      description: image.description || '',
+      image_url: image.image_url || '',
+      categories: image.categories || '',
+      uploaded_at: image.uploaded_at || new Date().toISOString(),
+      username: image.username || 'Unknown User'
+    }));
+    
+    res.json({
+      success: true,
+      data: sanitizedImages,
+      query: query,
+      pagination: {
+        limit: limitNum,
+        offset: offsetNum,
+        count: sanitizedImages.length
+      },
+      timestamp: new Date().toISOString()
     });
+  } catch (error) {
+    console.error('Image search error:', {
+      message: error.message,
+      stack: error.stack,
+      query: req.query,
+      timestamp: new Date().toISOString()
+    });
+    
+    if (!res.headersSent) {
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to search images',
+        message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error',
+        data: [],
+        timestamp: new Date().toISOString()
+      });
+    }
+  } finally {
+    if (client) {
+      client.release();
+    }
   }
 });
 
@@ -623,10 +777,19 @@ app.use((err, req, res, next) => {
 
 // API 404 handler - must come before the SPA catch-all
 app.use('/api/*', (req, res) => {
+  console.warn(`API 404: ${req.method} ${req.path} - Origin: ${req.get('Origin') || 'none'}`);
   res.status(404).json({
     success: false,
     error: 'API endpoint not found',
     message: `The endpoint ${req.method} ${req.path} does not exist`,
+    available_endpoints: [
+      'GET /api/health',
+      'GET /api/health/db',
+      'GET /api/images',
+      'GET /api/images/search',
+      'POST /api/auth/login',
+      'POST /api/auth/register'
+    ],
     timestamp: new Date().toISOString()
   });
 });
