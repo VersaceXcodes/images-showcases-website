@@ -16,11 +16,6 @@ export const apiClient = axios.create({
   validateStatus: function (status) {
     return status >= 200 && status < 300; // default
   },
-  // Add retry configuration
-  retry: 3,
-  retryDelay: (retryCount) => {
-    return Math.pow(2, retryCount) * 1000; // exponential backoff
-  },
 });
 
 // Add auth token to requests if available
@@ -57,8 +52,6 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error) => {
-    const originalRequest = error.config;
-    
     console.error('API Error:', {
       url: error.config?.url,
       method: error.config?.method,
