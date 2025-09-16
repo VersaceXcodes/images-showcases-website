@@ -33,10 +33,12 @@ const UV_Homepage: React.FC = () => {
   const category = new URLSearchParams(window.location.search).get('filter');
   const isAuthenticated = useAppStore(state => state.authentication_state.authentication_status.is_authenticated);
 
-  const { data: showcases, isPending: isLoading, isError, refetch } = useQuery<Showcase[], Error>({
+  const { data: showcases, isPending: isLoading, isError, error, refetch } = useQuery<Showcase[], Error>({
     queryKey: ['showcases', category],
     queryFn: () => fetchShowcases(category || undefined),
-    enabled: !!category || true,
+    enabled: true,
+    retry: 2,
+    retryDelay: 1000,
   });
 
   useEffect(() => {
@@ -68,8 +70,15 @@ const UV_Homepage: React.FC = () => {
           </div>
         )}
         {isError && (
-          <div className="text-red-500 text-center mt-8">
-            <p>Failed to load showcases. Please try again later.</p>
+          <div className="text-red-500 text-center mt-8 p-4 bg-red-50 rounded-lg max-w-md mx-auto">
+            <p className="font-semibold">Failed to load showcases</p>
+            <p className="text-sm mt-2">{error?.message || 'Please try again later.'}</p>
+            <button 
+              onClick={() => refetch()} 
+              className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+            >
+              Try Again
+            </button>
           </div>
         )}
 
@@ -78,7 +87,15 @@ const UV_Homepage: React.FC = () => {
             {showcases.map((showcase) => (
               <div key={showcase.showcase_id} className="bg-white shadow rounded overflow-hidden">
                  {showcase.images.length > 0 && (
-                   <img src={showcase.images[0].image_url} alt={showcase.title} className="w-full h-48 object-cover" />
+                   <img 
+                     src={showcase.images[0].image_url} 
+                     alt={showcase.title} 
+                     className="w-full h-48 object-cover"
+                     onError={(e) => {
+                       const target = e.target as HTMLImageElement;
+                       target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vdCBmb3VuZDwvdGV4dD48L3N2Zz4=';
+                     }}
+                   />
                  )}
                 <div className="p-4">
                   <h3 className="font-semibold text-lg">{showcase.title}</h3>
@@ -87,9 +104,17 @@ const UV_Homepage: React.FC = () => {
                      <Link to={`/image/${showcase.showcase_id}`} className="text-blue-500 hover:underline">
                        View Image
                      </Link>
-                   </div>                </div>
+                   </div>
+                </div>
               </div>
             ))}
+          </div>
+        )}
+        
+        {showcases && showcases.length === 0 && !isLoading && !isError && (
+          <div className="text-center mt-8 p-8">
+            <p className="text-gray-500 text-lg">No showcases available yet.</p>
+            <p className="text-gray-400 text-sm mt-2">Be the first to upload an image!</p>
           </div>
         )}
       </div>

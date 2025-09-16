@@ -19,6 +19,7 @@ import UV_About from '@/components/views/UV_About.tsx';
 import UV_Contact from '@/components/views/UV_Contact.tsx';
 import UV_Privacy from '@/components/views/UV_Privacy.tsx';
 import UV_Terms from '@/components/views/UV_Terms.tsx';
+import ErrorBoundary from '@/components/ErrorBoundary.tsx';
 
 /* Query Client */
 const queryClient = new QueryClient({
@@ -66,49 +67,101 @@ const App: React.FC = () => {
   }
 
   return (
-    <Router>
-      <QueryClientProvider client={queryClient}>
-        <div className="App min-h-screen flex flex-col">
-          <GV_TopNav />
-          <main className="flex-1 pt-16">
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<UV_Homepage />} />
-              <Route path="/explore" element={<UV_Explore />} />
-              <Route path="/image/:image_id" element={<UV_SingleImageView />} />
-              <Route path="/profile/:user_id" element={<UV_UserProfile />} />
-              <Route path="/featured" element={<UV_FeaturedGalleries />} />
-              <Route path="/auth" element={<UV_LogInSignUp />} />
-              <Route path="/about" element={<UV_About />} />
-              <Route path="/contact" element={<UV_Contact />} />
-              <Route path="/privacy" element={<UV_Privacy />} />
-              <Route path="/terms" element={<UV_Terms />} />
+    <ErrorBoundary>
+      <Router>
+        <QueryClientProvider client={queryClient}>
+          <div className="App min-h-screen flex flex-col">
+            <ErrorBoundary>
+              <GV_TopNav />
+            </ErrorBoundary>
+            <main className="flex-1 pt-16">
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={
+                  <ErrorBoundary>
+                    <UV_Homepage />
+                  </ErrorBoundary>
+                } />
+                <Route path="/explore" element={
+                  <ErrorBoundary>
+                    <UV_Explore />
+                  </ErrorBoundary>
+                } />
+                <Route path="/image/:image_id" element={
+                  <ErrorBoundary>
+                    <UV_SingleImageView />
+                  </ErrorBoundary>
+                } />
+                <Route path="/profile/:user_id" element={
+                  <ErrorBoundary>
+                    <UV_UserProfile />
+                  </ErrorBoundary>
+                } />
+                <Route path="/featured" element={
+                  <ErrorBoundary>
+                    <UV_FeaturedGalleries />
+                  </ErrorBoundary>
+                } />
+                <Route path="/auth" element={
+                  <ErrorBoundary>
+                    <UV_LogInSignUp />
+                  </ErrorBoundary>
+                } />
+                <Route path="/about" element={
+                  <ErrorBoundary>
+                    <UV_About />
+                  </ErrorBoundary>
+                } />
+                <Route path="/contact" element={
+                  <ErrorBoundary>
+                    <UV_Contact />
+                  </ErrorBoundary>
+                } />
+                <Route path="/privacy" element={
+                  <ErrorBoundary>
+                    <UV_Privacy />
+                  </ErrorBoundary>
+                } />
+                <Route path="/terms" element={
+                  <ErrorBoundary>
+                    <UV_Terms />
+                  </ErrorBoundary>
+                } />
 
-              {/* Protected Routes */}
-              <Route path="/upload" element={
-                <ProtectedRoute>
-                  <UV_ImageUpload />
-                </ProtectedRoute>
-              } />
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
-                  <UV_UserDashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/notifications" element={
-                <ProtectedRoute>
-                  <UV_Notifications />
-                </ProtectedRoute>
-              } />
+                {/* Protected Routes */}
+                <Route path="/upload" element={
+                  <ProtectedRoute>
+                    <ErrorBoundary>
+                      <UV_ImageUpload />
+                    </ErrorBoundary>
+                  </ProtectedRoute>
+                } />
+                <Route path="/dashboard" element={
+                  <ProtectedRoute>
+                    <ErrorBoundary>
+                      <UV_UserDashboard />
+                    </ErrorBoundary>
+                  </ProtectedRoute>
+                } />
+                <Route path="/notifications" element={
+                  <ProtectedRoute>
+                    <ErrorBoundary>
+                      <UV_Notifications />
+                    </ErrorBoundary>
+                  </ProtectedRoute>
+                } />
 
-              {/* Catch all - redirect based on auth status */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </main>
-          <GV_Footer />
-        </div>
-      </QueryClientProvider>
-    </Router>
+                {/* Catch all - redirect based on auth status */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </main>
+            <ErrorBoundary>
+              <GV_Footer />
+            </ErrorBoundary>
+          </div>
+        </QueryClientProvider>
+      </Router>
+    </ErrorBoundary>
   );
 };
 

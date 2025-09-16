@@ -79,7 +79,7 @@ const __dirname = path.dirname(__filename);
 const port = Number(process.env.PORT) || 3000;
 
 // Serve static files from the vitereact build directory
-app.use(express.static(path.join(__dirname, '../vitereact/dist')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Middleware
 app.use(cors({
@@ -125,6 +125,22 @@ const authenticateToken = (req, res, next) => {
 };
 
 // --------------------- REST API Routes ---------------------
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Database health check
+app.get('/api/health/db', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.json({ status: 'ok', database: 'connected' });
+  } catch (error) {
+    console.error('Database health check failed:', error);
+    res.status(500).json({ status: 'error', database: 'disconnected', error: error.message });
+  }
+});
 
 // User Registration
 app.post('/api/auth/register', async (req, res) => {
@@ -217,17 +233,30 @@ app.post('/api/images', authenticateToken, upload.single('image'), async (req, r
 app.get('/api/images', async (req, res) => {
   try {
     const { limit = 20, offset = 0, sort_by = 'uploaded_at', sort_order = 'DESC' } = req.query;
+    
+    // Validate sort parameters to prevent SQL injection
+    const validSortColumns = ['uploaded_at', 'title', 'created_at'];
+    const validSortOrders = ['ASC', 'DESC'];
+    
+    const sortBy = validSortColumns.includes(sort_by as string) ? sort_by : 'uploaded_at';
+    const sortOrder = validSortOrders.includes(sort_order as string) ? sort_order : 'DESC';
+    
     const result = await pool.query(
       `SELECT i.*, u.username FROM images i 
        LEFT JOIN users u ON i.user_id = u.user_id 
-       ORDER BY ${sort_by} ${sort_order}
+       ORDER BY i.${sortBy} ${sortOrder}
        LIMIT $1 OFFSET $2`,
-      [limit, offset]
+      [parseInt(limit as string), parseInt(offset as string)]
     );
+    
+    console.log(`Fetched ${result.rows.length} images`);
     res.json(result.rows);
   } catch (error) {
     console.error('Images fetch error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ 
+      message: 'Failed to fetch images', 
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' 
+    });
   }
 });
 
@@ -235,6 +264,13 @@ app.get('/api/images', async (req, res) => {
 app.get('/api/images/search', async (req, res) => {
   try {
     const { query = '', limit = 20, offset = 0, sort_by = 'uploaded_at', sort_order = 'DESC' } = req.query;
+    
+    // Validate sort parameters
+    const validSortColumns = ['uploaded_at', 'title', 'created_at'];
+    const validSortOrders = ['ASC', 'DESC'];
+    
+    const sortBy = validSortColumns.includes(sort_by as string) ? sort_by : 'uploaded_at';
+    const sortOrder = validSortOrders.includes(sort_order as string) ? sort_order : 'DESC';
     
     let sqlQuery = `SELECT i.*, u.username FROM images i 
                     LEFT JOIN users u ON i.user_id = u.user_id`;
@@ -247,14 +283,18 @@ app.get('/api/images/search', async (req, res) => {
       paramIndex++;
     }
     
-    sqlQuery += ` ORDER BY ${sort_by} ${sort_order} LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
-    params.push(limit, offset);
+    sqlQuery += ` ORDER BY i.${sortBy} ${sortOrder} LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    params.push(parseInt(limit as string), parseInt(offset as string));
     
     const result = await pool.query(sqlQuery, params);
+    console.log(`Search query: "${query}", found ${result.rows.length} images`);
     res.json(result.rows);
   } catch (error) {
     console.error('Image search error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ 
+      message: 'Failed to search images', 
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' 
+    });
   }
 });
 
@@ -372,7 +412,7 @@ io.on('connection', (socket) => {
 
 // Catch-all route for SPA routing
 app.get(/^(?!\/api).*/, (req, res) => {
-  res.sendFile(path.join(__dirname, '../vitereact/dist', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Start the server
