@@ -48,7 +48,10 @@ const pool = new Pool(
   DATABASE_URL
     ? { 
         connectionString: DATABASE_URL, 
-        ssl: { rejectUnauthorized: false } 
+        ssl: { rejectUnauthorized: false },
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 2000,
       }
     : {
         host: PGHOST,
@@ -57,8 +60,16 @@ const pool = new Pool(
         password: PGPASSWORD,
         port: Number(PGPORT),
         ssl: { rejectUnauthorized: false },
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 2000,
       }
 );
+
+// Handle pool errors
+pool.on('error', (err, client) => {
+  console.error('Unexpected error on idle client', err);
+});
 
 const app = express();
 
@@ -81,15 +92,35 @@ const port = Number(process.env.PORT) || 3000;
 // Serve static files from the vitereact build directory
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Serve storage files for uploaded images
+app.use('/storage', express.static(path.join(__dirname, '../storage')));
+
 // Middleware
 app.use(cors({
   origin: [
     process.env.FRONTEND_URL || 'http://localhost:5173',
-    'https://123images-showcases-website.launchpulse.ai'
+    'https://123images-showcases-website.launchpulse.ai',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000'
   ],
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar'],
+  optionsSuccessStatus: 200
 }));
 app.use(express.json({ limit: "5mb" }));
+
+// Add request timeout middleware
+app.use((req, res, next) => {
+  req.setTimeout(30000, () => {
+    res.status(408).json({ message: 'Request timeout' });
+  });
+  res.setTimeout(30000, () => {
+    res.status(408).json({ message: 'Response timeout' });
+  });
+  next();
+});
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -128,6 +159,7 @@ const authenticateToken = (req, res, next) => {
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
@@ -135,9 +167,11 @@ app.get('/api/health', (req, res) => {
 app.get('/api/health/db', async (req, res) => {
   try {
     await pool.query('SELECT 1');
+    res.setHeader('Content-Type', 'application/json');
     res.json({ status: 'ok', database: 'connected' });
   } catch (error) {
     console.error('Database health check failed:', error);
+    res.setHeader('Content-Type', 'application/json');
     res.status(500).json({ status: 'error', database: 'disconnected', error: error.message });
   }
 });
@@ -408,6 +442,31 @@ io.on('connection', (socket) => {
 
   // Other WebSocket subscriptions
   // e.g., handling 'showcase/updates', 'image/comments', 'image/likes'
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('Global error handler:', err);
+  
+  // Handle specific error types
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({ 
+      message: 'Validation error', 
+      details: err.message 
+    });
+  }
+  
+  if (err.name === 'UnauthorizedError') {
+    return res.status(401).json({ 
+      message: 'Unauthorized access' 
+    });
+  }
+  
+  // Default error response
+  res.status(500).json({ 
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+  });
 });
 
 // Catch-all route for SPA routing

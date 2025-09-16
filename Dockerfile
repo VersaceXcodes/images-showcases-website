@@ -9,7 +9,7 @@ RUN npm install --save-dev eslint-import-resolver-typescript
 # Copy the rest of the frontend files and build
 COPY vitereact ./
 # Clear any existing build artifacts to force fresh build
-RUN rm -rf dist/ public/ build/
+RUN rm -rf dist/ build/
 RUN npm run build
 
 # Stage 2: Set up the Node.js backend
@@ -22,7 +22,7 @@ RUN npm install --production
 # Copy the backend files
 COPY backend ./
 # Copy the frontend build output to a directory served by the backend
-COPY --from=frontend-build /app/vitereact/public /app/backend/public
+COPY --from=frontend-build /app/vitereact/dist /app/backend/public
 # Expose the port the backend will run on
 EXPOSE 3000
 # Set environment variables

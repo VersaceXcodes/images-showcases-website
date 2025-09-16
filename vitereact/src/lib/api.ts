@@ -6,9 +6,11 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://123ima
 // Create axios instance with default config
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 30000, // 30 second timeout
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 });
 
 // Add auth token to requests if available
@@ -36,6 +38,10 @@ apiClient.interceptors.response.use(
     
     // Handle network errors
     if (!error.response) {
+      if (error.code === 'ECONNABORTED') {
+        console.error('Request timeout');
+        return Promise.reject(new Error('Request timeout - please try again'));
+      }
       console.error('Network error - server may be unreachable');
       return Promise.reject(new Error('Network error - please check your connection'));
     }
