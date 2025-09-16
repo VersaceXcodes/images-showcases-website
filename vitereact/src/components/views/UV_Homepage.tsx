@@ -13,10 +13,28 @@ const fetchShowcases = async (category?: string): Promise<Showcase[]> => {
     ? { query: category, limit: 20, offset: 0, sort_by: 'uploaded_at', sort_order: 'DESC' }
     : { limit: 20, offset: 0, sort_by: 'uploaded_at', sort_order: 'DESC' };
     
-  const { data } = await axios.get(endpoint, { params });
+  const response = await axios.get(endpoint, { 
+    params,
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    timeout: 15000
+  });
+  
+  // Handle both old and new API response formats
+  let images = response.data;
+  if (response.data && response.data.success && response.data.data) {
+    images = response.data.data;
+  } else if (Array.isArray(response.data)) {
+    images = response.data;
+  } else {
+    console.error('Unexpected API response format:', response.data);
+    throw new Error('Invalid response format from server');
+  }
   
   // Transform images to showcase format for display
-  const showcases: Showcase[] = data.map((image: any) => ({
+  const showcases: Showcase[] = images.map((image: any) => ({
     showcase_id: image.image_id,
     user_id: image.user_id,
     title: image.title,

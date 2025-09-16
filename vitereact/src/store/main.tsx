@@ -180,19 +180,33 @@ export const useAppStore = create<AppState>()(
         }
 
         try {
-          // First check if the API is reachable
-          await axios.get(`${API_BASE_URL}/health`, { timeout: 5000 });
+          // First check if the API is reachable with a shorter timeout
+          console.log('Checking API health...');
+          const healthResponse = await axios.get(`${API_BASE_URL}/health`, { 
+            timeout: 5000,
+            headers: { 'Accept': 'application/json' }
+          });
           
+          if (!healthResponse.data || healthResponse.data.status !== 'ok') {
+            throw new Error('API health check failed');
+          }
+          
+          console.log('API is healthy, validating user token...');
           // Then validate the user token
           const response = await axios.get(
             `${API_BASE_URL}/users/${currentUser.user_id}`,
             { 
-              headers: { Authorization: `Bearer ${token}` },
+              headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              },
               timeout: 10000
             }
           );
 
           const user = response.data;
+          console.log('User token validated successfully');
           set(() => ({
             authentication_state: {
               current_user: user,
@@ -203,14 +217,20 @@ export const useAppStore = create<AppState>()(
             user_profile: user,
           }));
         } catch (error: any) {
-          console.error('Auth initialization failed:', error.message);
+          console.error('Auth initialization failed:', {
+            message: error.message,
+            status: error.response?.status,
+            data: error.response?.data,
+            timestamp: new Date().toISOString()
+          });
+          
           // Clear invalid auth state
           set(() => ({
             authentication_state: {
               current_user: null,
               auth_token: null,
               authentication_status: { is_authenticated: false, is_loading: false },
-              error_message: null,
+              error_message: error.message.includes('Network') ? 'Unable to connect to server' : null,
             },
           }));
         }

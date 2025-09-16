@@ -51,7 +51,7 @@ const pool = new Pool(
         ssl: { rejectUnauthorized: false },
         max: 20,
         idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 2000,
+        connectionTimeoutMillis: 5000, // Increased from 2000
       }
     : {
         host: PGHOST,
@@ -62,13 +62,29 @@ const pool = new Pool(
         ssl: { rejectUnauthorized: false },
         max: 20,
         idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 2000,
+        connectionTimeoutMillis: 5000, // Increased from 2000
       }
 );
 
 // Handle pool errors
 pool.on('error', (err, client) => {
-  console.error('Unexpected error on idle client', err);
+  console.error('Unexpected error on idle client', {
+    error: err.message,
+    stack: err.stack,
+    timestamp: new Date().toISOString()
+  });
+});
+
+pool.on('connect', (client) => {
+  console.log('New client connected to database');
+});
+
+pool.on('acquire', (client) => {
+  console.log('Client acquired from pool');
+});
+
+pool.on('remove', (client) => {
+  console.log('Client removed from pool');
 });
 
 const app = express();
@@ -107,19 +123,33 @@ app.use(cors({
       'http://localhost:3000',
       'http://127.0.0.1:3000',
       'http://localhost:5173',
-      'https://localhost:5173'
+      'https://localhost:5173',
+      // Add more flexible origin matching
+      /^https:\/\/.*\.launchpulse\.ai$/,
+      /^http:\/\/localhost:\d+$/,
+      /^http:\/\/127\.0\.0\.1:\d+$/
     ];
     
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    const isAllowed = allowedOrigins.some(allowedOrigin => {
+      if (typeof allowedOrigin === 'string') {
+        return allowedOrigin === origin;
+      } else if (allowedOrigin instanceof RegExp) {
+        return allowedOrigin.test(origin);
+      }
+      return false;
+    });
+    
+    if (isAllowed) {
       callback(null, true);
     } else {
       console.warn(`CORS blocked origin: ${origin}`);
-      callback(null, true); // Allow all origins for now to prevent blocking
+      // For debugging purposes, allow all origins but log the warning
+      callback(null, true);
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'Cache-Control'],
   exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar'],
   optionsSuccessStatus: 200,
   preflightContinue: false
@@ -130,18 +160,37 @@ app.use(express.json({ limit: "5mb" }));
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - Origin: ${req.get('Origin') || 'none'}`);
   
-  req.setTimeout(30000, () => {
+  // Set proper headers for all responses
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  
+  // Set timeout handlers
+  const timeoutDuration = 30000; // 30 seconds
+  
+  req.setTimeout(timeoutDuration, () => {
     console.error(`Request timeout for ${req.method} ${req.path}`);
     if (!res.headersSent) {
-      res.status(408).json({ message: 'Request timeout' });
+      res.status(408).json({ 
+        error: 'Request timeout',
+        message: 'The request took too long to process',
+        timestamp: new Date().toISOString()
+      });
     }
   });
-  res.setTimeout(30000, () => {
+  
+  res.setTimeout(timeoutDuration, () => {
     console.error(`Response timeout for ${req.method} ${req.path}`);
     if (!res.headersSent) {
-      res.status(408).json({ message: 'Response timeout' });
+      res.status(408).json({ 
+        error: 'Response timeout',
+        message: 'The response took too long to send',
+        timestamp: new Date().toISOString()
+      });
     }
   });
+  
   next();
 });
 
@@ -182,9 +231,25 @@ const authenticateToken = (req, res, next) => {
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.setHeader('Content-Type', 'application/json');
-  res.setHeader('Cache-Control', 'no-cache');
-  res.json({ status: 'ok', timestamp: new Date().toISOString(), environment: process.env.NODE_ENV || 'development' });
+  try {
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.json({ 
+      success: true,
+      status: 'ok', 
+      timestamp: new Date().toISOString(), 
+      environment: process.env.NODE_ENV || 'development',
+      version: '1.0.0'
+    });
+  } catch (error) {
+    console.error('Health check error:', error);
+    res.status(500).json({
+      success: false,
+      status: 'error',
+      message: 'Health check failed',
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // Database health check
@@ -194,17 +259,21 @@ app.get('/api/health/db', async (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Cache-Control', 'no-cache');
     res.json({ 
+      success: true,
       status: 'ok', 
       database: 'connected', 
       timestamp: result.rows[0].timestamp,
-      pool_total: pool.totalCount,
-      pool_idle: pool.idleCount,
-      pool_waiting: pool.waitingCount
+      pool_stats: {
+        total: pool.totalCount,
+        idle: pool.idleCount,
+        waiting: pool.waitingCount
+      }
     });
   } catch (error) {
     console.error('Database health check failed:', error);
     res.setHeader('Content-Type', 'application/json');
     res.status(500).json({ 
+      success: false,
       status: 'error', 
       database: 'disconnected', 
       error: error.message,
@@ -305,28 +374,44 @@ app.get('/api/images', async (req, res) => {
   try {
     const { limit = 20, offset = 0, sort_by = 'uploaded_at', sort_order = 'DESC' } = req.query;
     
-    // Validate sort parameters to prevent SQL injection
+    // Validate and sanitize parameters
     const validSortColumns = ['uploaded_at', 'title', 'created_at'];
     const validSortOrders = ['ASC', 'DESC'];
     
     const sortBy = validSortColumns.includes(sort_by as string) ? sort_by : 'uploaded_at';
     const sortOrder = validSortOrders.includes(sort_order as string) ? sort_order : 'DESC';
     
+    const limitNum = Math.min(Math.max(parseInt(limit as string) || 20, 1), 100); // Max 100 items
+    const offsetNum = Math.max(parseInt(offset as string) || 0, 0);
+    
     const result = await pool.query(
       `SELECT i.*, u.username FROM images i 
        LEFT JOIN users u ON i.user_id = u.user_id 
        ORDER BY i.${sortBy} ${sortOrder}
        LIMIT $1 OFFSET $2`,
-      [parseInt(limit as string), parseInt(offset as string)]
+      [limitNum, offsetNum]
     );
     
     console.log(`Fetched ${result.rows.length} images`);
-    res.json(result.rows);
+    
+    res.setHeader('Content-Type', 'application/json');
+    res.json({
+      success: true,
+      data: result.rows,
+      pagination: {
+        limit: limitNum,
+        offset: offsetNum,
+        count: result.rows.length
+      },
+      timestamp: new Date().toISOString()
+    });
   } catch (error) {
     console.error('Images fetch error:', error);
     res.status(500).json({ 
-      message: 'Failed to fetch images', 
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error' 
+      success: false,
+      error: 'Failed to fetch images',
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error',
+      timestamp: new Date().toISOString()
     });
   }
 });
@@ -483,26 +568,66 @@ io.on('connection', (socket) => {
 
 // Global error handler
 app.use((err, req, res, next) => {
-  console.error('Global error handler:', err);
+  console.error('Global error handler:', {
+    error: err.message,
+    stack: err.stack,
+    url: req.url,
+    method: req.method,
+    timestamp: new Date().toISOString()
+  });
+  
+  // Ensure response is JSON
+  if (!res.headersSent) {
+    res.setHeader('Content-Type', 'application/json');
+  }
   
   // Handle specific error types
   if (err.name === 'ValidationError') {
     return res.status(400).json({ 
-      message: 'Validation error', 
-      details: err.message 
+      success: false,
+      error: 'Validation error',
+      message: 'The provided data is invalid',
+      details: err.message,
+      timestamp: new Date().toISOString()
     });
   }
   
   if (err.name === 'UnauthorizedError') {
     return res.status(401).json({ 
-      message: 'Unauthorized access' 
+      success: false,
+      error: 'Unauthorized access',
+      message: 'Authentication required',
+      timestamp: new Date().toISOString()
+    });
+  }
+  
+  if (err.name === 'SyntaxError' && err.message.includes('JSON')) {
+    return res.status(400).json({
+      success: false,
+      error: 'Invalid JSON',
+      message: 'The request body contains invalid JSON',
+      timestamp: new Date().toISOString()
     });
   }
   
   // Default error response
-  res.status(500).json({ 
-    message: 'Internal server error',
-    error: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+  if (!res.headersSent) {
+    res.status(500).json({ 
+      success: false,
+      error: 'Internal server error',
+      message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// API 404 handler - must come before the SPA catch-all
+app.use('/api/*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    error: 'API endpoint not found',
+    message: `The endpoint ${req.method} ${req.path} does not exist`,
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -512,8 +637,48 @@ app.get(/^(?!\/api).*/, (req, res) => {
 });
 
 // Start the server
-httpServer.listen(port, '0.0.0.0', () => {
+const server = httpServer.listen(port, '0.0.0.0', () => {
   console.log(`Server running on port ${port}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
+});
+
+// Graceful shutdown handling
+const gracefulShutdown = (signal: string) => {
+  console.log(`Received ${signal}. Starting graceful shutdown...`);
+  
+  server.close(() => {
+    console.log('HTTP server closed');
+    
+    pool.end(() => {
+      console.log('Database pool closed');
+      process.exit(0);
+    });
+  });
+  
+  // Force close after 30 seconds
+  setTimeout(() => {
+    console.error('Could not close connections in time, forcefully shutting down');
+    process.exit(1);
+  }, 30000);
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', {
+    error: error.message,
+    stack: error.stack,
+    timestamp: new Date().toISOString()
+  });
+  gracefulShutdown('uncaughtException');
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  gracefulShutdown('unhandledRejection');
 });
 
 export { app, pool };
