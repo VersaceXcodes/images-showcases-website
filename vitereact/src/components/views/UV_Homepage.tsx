@@ -52,9 +52,12 @@ const fetchShowcases = async (category?: string): Promise<Showcase[]> => {
       tags: image.categories ? image.categories.split(',').map((tag: string) => tag.trim()) : [],
       images: [{ 
         image_id: image.image_id, 
+        user_id: image.user_id,
         image_url: image.image_url, 
         title: image.title, 
-        description: image.description 
+        description: image.description,
+        categories: image.categories || null,
+        uploaded_at: new Date(image.uploaded_at || Date.now())
       }],
       created_at: new Date(image.uploaded_at || Date.now())
     }));
