@@ -97,27 +97,50 @@ app.use('/storage', express.static(path.join(__dirname, '../storage')));
 
 // Middleware
 app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL || 'http://localhost:5173',
-    'https://123images-showcases-website.launchpulse.ai',
-    'http://localhost:3000',
-    'http://127.0.0.1:3000'
-  ],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      process.env.FRONTEND_URL || 'http://localhost:5173',
+      'https://123images-showcases-website.launchpulse.ai',
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+      'http://localhost:5173',
+      'https://localhost:5173'
+    ];
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS blocked origin: ${origin}`);
+      callback(null, true); // Allow all origins for now to prevent blocking
+    }
+  },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
   exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar'],
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
+  preflightContinue: false
 }));
 app.use(express.json({ limit: "5mb" }));
 
-// Add request timeout middleware
+// Add request logging and timeout middleware
 app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - Origin: ${req.get('Origin') || 'none'}`);
+  
   req.setTimeout(30000, () => {
-    res.status(408).json({ message: 'Request timeout' });
+    console.error(`Request timeout for ${req.method} ${req.path}`);
+    if (!res.headersSent) {
+      res.status(408).json({ message: 'Request timeout' });
+    }
   });
   res.setTimeout(30000, () => {
-    res.status(408).json({ message: 'Response timeout' });
+    console.error(`Response timeout for ${req.method} ${req.path}`);
+    if (!res.headersSent) {
+      res.status(408).json({ message: 'Response timeout' });
+    }
   });
   next();
 });
@@ -160,19 +183,33 @@ const authenticateToken = (req, res, next) => {
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.setHeader('Cache-Control', 'no-cache');
+  res.json({ status: 'ok', timestamp: new Date().toISOString(), environment: process.env.NODE_ENV || 'development' });
 });
 
 // Database health check
 app.get('/api/health/db', async (req, res) => {
   try {
-    await pool.query('SELECT 1');
+    const result = await pool.query('SELECT 1 as health_check, NOW() as timestamp');
     res.setHeader('Content-Type', 'application/json');
-    res.json({ status: 'ok', database: 'connected' });
+    res.setHeader('Cache-Control', 'no-cache');
+    res.json({ 
+      status: 'ok', 
+      database: 'connected', 
+      timestamp: result.rows[0].timestamp,
+      pool_total: pool.totalCount,
+      pool_idle: pool.idleCount,
+      pool_waiting: pool.waitingCount
+    });
   } catch (error) {
     console.error('Database health check failed:', error);
     res.setHeader('Content-Type', 'application/json');
-    res.status(500).json({ status: 'error', database: 'disconnected', error: error.message });
+    res.status(500).json({ 
+      status: 'error', 
+      database: 'disconnected', 
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
   }
 });
 

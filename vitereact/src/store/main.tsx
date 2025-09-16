@@ -167,21 +167,29 @@ export const useAppStore = create<AppState>()(
       initialize_auth: async () => {
         const { authentication_state } = get();
         const token = authentication_state.auth_token;
+        const currentUser = authentication_state.current_user;
 
-        if (!token) {
+        if (!token || !currentUser?.user_id) {
           set((state) => ({
             authentication_state: {
               ...state.authentication_state,
-              authentication_status: { ...state.authentication_state.authentication_status, is_loading: false },
+              authentication_status: { is_authenticated: false, is_loading: false },
             },
           }));
           return;
         }
 
         try {
+          // First check if the API is reachable
+          await axios.get(`${API_BASE_URL}/health`, { timeout: 5000 });
+          
+          // Then validate the user token
           const response = await axios.get(
-            `${API_BASE_URL}/users/${authentication_state.current_user?.user_id}`,
-            { headers: { Authorization: `Bearer ${token}` } }
+            `${API_BASE_URL}/users/${currentUser.user_id}`,
+            { 
+              headers: { Authorization: `Bearer ${token}` },
+              timeout: 10000
+            }
           );
 
           const user = response.data;
@@ -194,7 +202,9 @@ export const useAppStore = create<AppState>()(
             },
             user_profile: user,
           }));
-        } catch {
+        } catch (error: any) {
+          console.error('Auth initialization failed:', error.message);
+          // Clear invalid auth state
           set(() => ({
             authentication_state: {
               current_user: null,
@@ -252,9 +262,30 @@ export const useAppStore = create<AppState>()(
       real_time: {
         socket: null,
         connectSocket: () => {
-          if (!get().real_time.socket) {
+          const currentSocket = get().real_time.socket;
+          if (currentSocket && currentSocket.connected) {
+            return; // Already connected
+          }
+
+          try {
             const socket = io(API_BASE_URL.replace('/api', ''), {
               auth: { token: get().authentication_state.auth_token },
+              timeout: 10000,
+              reconnection: true,
+              reconnectionAttempts: 3,
+              reconnectionDelay: 1000,
+            });
+
+            socket.on('connect', () => {
+              console.log('Socket.IO connected');
+            });
+
+            socket.on('disconnect', (reason) => {
+              console.log('Socket.IO disconnected:', reason);
+            });
+
+            socket.on('connect_error', (error) => {
+              console.error('Socket.IO connection error:', error);
             });
 
             socket.on('user/notifications', (notifications: Notification[]) => {
@@ -264,6 +295,8 @@ export const useAppStore = create<AppState>()(
             set((state) => ({
               real_time: { ...state.real_time, socket },
             }));
+          } catch (error) {
+            console.error('Failed to create socket connection:', error);
           }
         },
         disconnectSocket: () => {

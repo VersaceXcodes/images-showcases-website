@@ -9,8 +9,12 @@ export const apiClient = axios.create({
   timeout: 30000, // 30 second timeout
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
   },
   withCredentials: true,
+  validateStatus: function (status) {
+    return status >= 200 && status < 300; // default
+  },
 });
 
 // Add auth token to requests if available
@@ -32,15 +36,31 @@ apiClient.interceptors.request.use((config) => {
 
 // Add response interceptor for better error handling
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Log successful responses in development
+    if (import.meta.env.DEV) {
+      console.log(`API Success: ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`);
+    }
+    return response;
+  },
   (error) => {
-    console.error('API Error:', error);
+    console.error('API Error:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data
+    });
     
     // Handle network errors
     if (!error.response) {
       if (error.code === 'ECONNABORTED') {
         console.error('Request timeout');
         return Promise.reject(new Error('Request timeout - please try again'));
+      }
+      if (error.code === 'ERR_NETWORK') {
+        console.error('Network error - server may be unreachable');
+        return Promise.reject(new Error('Network error - please check your connection'));
       }
       console.error('Network error - server may be unreachable');
       return Promise.reject(new Error('Network error - please check your connection'));
@@ -56,6 +76,8 @@ apiClient.interceptors.response.use(
         break;
       case 401:
         message = 'Unauthorized - please log in';
+        // Clear auth token on 401
+        localStorage.removeItem('app-storage');
         break;
       case 403:
         message = 'Forbidden - insufficient permissions';
@@ -71,6 +93,9 @@ apiClient.interceptors.response.use(
         break;
       case 503:
         message = 'Service unavailable - please try again later';
+        break;
+      case 504:
+        message = 'Gateway timeout - please try again later';
         break;
       default:
         message = data?.message || `HTTP ${status} error`;
