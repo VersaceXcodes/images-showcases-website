@@ -176,21 +176,21 @@ export const useAppStore = create<AppState>()(
 
         try {
           // First check if the API is reachable with a shorter timeout
-          console.log('Checking API health...');
-          const healthResponse = await apiClient.get('/health', { timeout: 5000 });
+          console.log('🔍 Checking API health...');
+          const healthResponse = await apiClient.get('/health', { timeout: 8000 });
           
           if (!healthResponse.data || healthResponse.data.status !== 'ok') {
             throw new Error('API health check failed');
           }
           
-          console.log('API is healthy, validating user token...');
+          console.log('✅ API is healthy, validating user token...');
           // Then validate the user token
           const response = await apiClient.get(`/users/${currentUser.user_id}`, { 
-            timeout: 10000 
+            timeout: 12000 
           });
 
           const user = response.data;
-          console.log('User token validated successfully');
+          console.log('✅ User token validated successfully');
           set(() => ({
             authentication_state: {
               current_user: user,
@@ -201,14 +201,29 @@ export const useAppStore = create<AppState>()(
             user_profile: user,
           }));
         } catch (error: any) {
-          console.error('Auth initialization failed:', {
+          console.error('❌ Auth initialization failed:', {
             message: error.message,
             status: error.response?.status,
             data: error.response?.data,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            url: error.config?.url,
+            method: error.config?.method
           });
           
-          // Clear invalid auth state
+          // For 502 errors, don't clear auth state immediately - the user might still be valid
+          if (error.response?.status === 502 || error.message.includes('502') || error.message.includes('Bad gateway')) {
+            console.warn('⚠️ 502 error detected - keeping auth state but marking as error');
+            set((state) => ({
+              authentication_state: {
+                ...state.authentication_state,
+                authentication_status: { is_authenticated: false, is_loading: false },
+                error_message: 'Server temporarily unavailable - please try again',
+              },
+            }));
+            return;
+          }
+          
+          // Clear invalid auth state for other errors
           set(() => ({
             authentication_state: {
               current_user: null,

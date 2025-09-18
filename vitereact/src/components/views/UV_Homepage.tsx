@@ -13,14 +13,19 @@ const fetchShowcases = async (category?: string): Promise<Showcase[]> => {
       ? { query: category, limit: 20, offset: 0, sort_by: 'uploaded_at', sort_order: 'DESC' }
       : { limit: 20, offset: 0, sort_by: 'uploaded_at', sort_order: 'DESC' };
       
-    console.log(`Fetching showcases from ${endpoint} with params:`, params);
+    console.log(`🔍 Fetching showcases from ${endpoint} with params:`, params);
     
     const response = await apiClient.get(endpoint, { 
       params,
       timeout: 15000
     });
     
-    console.log('API Response:', response.data);
+    console.log('✅ API Response received:', {
+      status: response.status,
+      dataType: typeof response.data,
+      dataKeys: response.data ? Object.keys(response.data) : 'null',
+      dataLength: Array.isArray(response.data) ? response.data.length : 'not array'
+    });
     
     // Handle both old and new API response formats
     let images = response.data;
@@ -79,14 +84,34 @@ const UV_Homepage: React.FC = () => {
     queryFn: () => fetchShowcases(category || undefined),
     enabled: true,
     retry: (failureCount, error) => {
+      console.log(`🔄 Query retry attempt ${failureCount} for error:`, error.message);
+      
       // Don't retry on 4xx errors (client errors)
       if (error.message.includes('400') || error.message.includes('401') || error.message.includes('403') || error.message.includes('404')) {
+        console.log('❌ Not retrying 4xx error');
         return false;
       }
-      // Retry up to 3 times for other errors
+      
+      // Retry on 5xx errors (server errors) including 502
+      if (error.message.includes('502') || error.message.includes('503') || error.message.includes('504') || error.message.includes('500')) {
+        console.log('🔄 Retrying server error');
+        return failureCount < 5; // More retries for server errors
+      }
+      
+      // Retry on network errors
+      if (error.message.includes('Network') || error.message.includes('timeout') || error.message.includes('unreachable')) {
+        console.log('🔄 Retrying network error');
+        return failureCount < 3;
+      }
+      
+      // Default retry logic
       return failureCount < 3;
     },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+    retryDelay: (attemptIndex) => {
+      const delay = Math.min(1000 * 2 ** attemptIndex, 30000); // Exponential backoff
+      console.log(`⏱️ Retrying in ${delay}ms`);
+      return delay;
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
   });

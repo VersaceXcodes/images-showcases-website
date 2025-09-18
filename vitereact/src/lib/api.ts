@@ -1,7 +1,9 @@
 import axios from 'axios';
 
 // Create a consistent API base URL
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://123images-showcases-website.launchpulse.ai/api';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL 
+  ? `${import.meta.env.VITE_API_BASE_URL}/api`
+  : 'https://123images-showcases-website.launchpulse.ai/api';
 
 // Create axios instance with default config
 export const apiClient = axios.create({
@@ -40,7 +42,10 @@ apiClient.interceptors.response.use(
   (response) => {
     // Log successful responses in development
     if (import.meta.env.DEV) {
-      console.log(`API Success: ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`);
+      console.log(`API Success: ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`, {
+        data: response.data,
+        headers: response.headers
+      });
     }
     
     // Validate response data
@@ -68,6 +73,17 @@ apiClient.interceptors.response.use(
     
     // Handle network errors
     if (!error.response) {
+      console.error('Network error details:', {
+        code: error.code,
+        message: error.message,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          baseURL: error.config?.baseURL,
+          timeout: error.config?.timeout
+        }
+      });
+      
       if (error.code === 'ECONNABORTED') {
         console.error('Request timeout');
         return Promise.reject(new Error('Request timeout - please try again'));

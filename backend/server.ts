@@ -68,23 +68,40 @@ const pool = new Pool(
 
 // Handle pool errors
 pool.on('error', (err, client) => {
-  console.error('Unexpected error on idle client', {
+  console.error('❌ Unexpected error on idle client', {
     error: err.message,
     stack: err.stack,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    pool_stats: {
+      total: pool.totalCount,
+      idle: pool.idleCount,
+      waiting: pool.waitingCount
+    }
   });
 });
 
 pool.on('connect', (client) => {
-  console.log('New client connected to database');
+  console.log('✅ New client connected to database', {
+    total: pool.totalCount,
+    idle: pool.idleCount,
+    waiting: pool.waitingCount
+  });
 });
 
 pool.on('acquire', (client) => {
-  console.log('Client acquired from pool');
+  console.log('📤 Client acquired from pool', {
+    total: pool.totalCount,
+    idle: pool.idleCount,
+    waiting: pool.waitingCount
+  });
 });
 
 pool.on('remove', (client) => {
-  console.log('Client removed from pool');
+  console.log('📥 Client removed from pool', {
+    total: pool.totalCount,
+    idle: pool.idleCount,
+    waiting: pool.waitingCount
+  });
 });
 
 // Test database connection on startup
@@ -320,14 +337,27 @@ app.get('/api/health', (req, res) => {
       status: 'ok', 
       timestamp: new Date().toISOString(), 
       environment: process.env.NODE_ENV || 'development',
-      version: '1.0.0'
+      version: '1.0.0',
+      server: {
+        uptime: process.uptime(),
+        memory: process.memoryUsage(),
+        pid: process.pid
+      },
+      database: {
+        pool_stats: {
+          total: pool.totalCount,
+          idle: pool.idleCount,
+          waiting: pool.waitingCount
+        }
+      }
     });
   } catch (error) {
-    console.error('Health check error:', error);
+    console.error('❌ Health check error:', error);
     res.status(500).json({
       success: false,
       status: 'error',
       message: 'Health check failed',
+      error: error.message,
       timestamp: new Date().toISOString()
     });
   }
@@ -335,8 +365,12 @@ app.get('/api/health', (req, res) => {
 
 // Database health check
 app.get('/api/health/db', async (req, res) => {
+  let client;
   try {
-    const result = await pool.query('SELECT 1 as health_check, NOW() as timestamp');
+    console.log('🔍 Database health check requested');
+    client = await pool.connect();
+    const result = await client.query('SELECT 1 as health_check, NOW() as timestamp, version() as db_version');
+    
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Cache-Control', 'no-cache');
     res.json({ 
@@ -344,23 +378,84 @@ app.get('/api/health/db', async (req, res) => {
       status: 'ok', 
       database: 'connected', 
       timestamp: result.rows[0].timestamp,
+      db_version: result.rows[0].db_version.split(' ')[0],
       pool_stats: {
         total: pool.totalCount,
         idle: pool.idleCount,
         waiting: pool.waitingCount
       }
     });
+    console.log('✅ Database health check passed');
   } catch (error) {
-    console.error('Database health check failed:', error);
+    console.error('❌ Database health check failed:', {
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
     res.setHeader('Content-Type', 'application/json');
     res.status(500).json({ 
       success: false,
       status: 'error', 
       database: 'disconnected', 
       error: error.message,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      pool_stats: {
+        total: pool.totalCount,
+        idle: pool.idleCount,
+        waiting: pool.waitingCount
+      }
     });
+  } finally {
+    if (client) {
+      client.release();
+    }
   }
+});
+
+// Comprehensive system health check
+app.get('/api/health/system', async (req, res) => {
+  const healthChecks: any = {
+    server: { status: 'ok', timestamp: new Date().toISOString() },
+    database: { status: 'unknown', timestamp: null },
+    memory: process.memoryUsage(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development'
+  };
+
+  let client;
+  try {
+    // Test database connection
+    client = await pool.connect();
+    await client.query('SELECT 1');
+    healthChecks.database = { 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      pool_stats: {
+        total: pool.totalCount,
+        idle: pool.idleCount,
+        waiting: pool.waitingCount
+      }
+    };
+  } catch (error: any) {
+    healthChecks.database = { 
+      status: 'error', 
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
+  } finally {
+    if (client) {
+      client.release();
+    }
+  }
+
+  const allHealthy = healthChecks.server.status === 'ok' && healthChecks.database.status === 'ok';
+  
+  res.status(allHealthy ? 200 : 503).json({
+    success: allHealthy,
+    status: allHealthy ? 'healthy' : 'unhealthy',
+    checks: healthChecks,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // User Registration
@@ -801,9 +896,33 @@ app.get(/^(?!\/api).*/, (req, res) => {
 
 // Start the server
 const server = httpServer.listen(port, '0.0.0.0', () => {
-  console.log(`Server running on port ${port}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
+  console.log(`🚀 Server running on port ${port}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
+  console.log(`📡 API Base URL: ${process.env.API_BASE_URL || 'http://localhost:3000/api'}`);
+  console.log(`🔒 CORS Origins: ${process.env.ALLOWED_ORIGINS || 'default'}`);
+  console.log(`💾 Database: ${DATABASE_URL ? 'Connected via URL' : 'Connected via individual params'}`);
+  console.log(`📊 Pool Stats: Total=${pool.totalCount}, Idle=${pool.idleCount}, Waiting=${pool.waitingCount}`);
+});
+
+// Add server error handling
+server.on('error', (error: any) => {
+  console.error('❌ Server error:', {
+    error: error.message,
+    code: error.code,
+    port: error.port,
+    timestamp: new Date().toISOString()
+  });
+  
+  if (error.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${port} is already in use`);
+    process.exit(1);
+  }
+});
+
+server.on('listening', () => {
+  const address = server.address();
+  console.log(`✅ Server is listening on ${typeof address === 'string' ? address : `${address?.address}:${address?.port}`}`);
 });
 
 // Graceful shutdown handling
